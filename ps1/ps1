@@ -1,6 +1,0 @@
-let rec is_mon_inc (lst: int list) : bool = 
-   match lst with
-      [] -> true
-      |[x] -> true 
-      |f::s::t -> 
-         if f<=s then is_mon_inc(s::t) else false
