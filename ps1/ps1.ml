@@ -76,7 +76,7 @@ let rec rev_int (i: int) : int =
  * Requires: lst is an `a list, k is an integer
  * Returns: an `a list list option with order preserved
  *)
-let rec unflatten ((k: int), (lst: 'a list)) : 'a list list option=
+let rec unflatten (k: int) (lst: 'a list) : 'a list list option=
     (* HELPER: returns a tuple of the list split before the kth index 
                Ex. splitter([1;2;3;4;5],2,[]) = ([1;2], [3;4;5]) *)
     let rec splitter ((hlst: 'a list),(hk: int),(accum: 'a list)) 

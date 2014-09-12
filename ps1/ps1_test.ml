@@ -31,12 +31,12 @@ TEST_UNIT "rev_int_test4" = assert_true (rev_int 123 = 321)
 TEST_UNIT "rev_int_test5" = assert_true (rev_int (-123) = (-321))
 TEST_UNIT "rev_int_test6" = assert_true (rev_int 88888 = 88888)
 
-TEST_UNIT "unflatten_test1" = assert_true (unflatten (0, [1;2;3]) = None)
-TEST_UNIT "unflatten_test1" = assert_true (unflatten (-2, [1;2;3]) = None)
-TEST_UNIT "unflatten_test1" = assert_true (unflatten (2, []) = Some [[]])
-TEST_UNIT "unflatten_test1" = assert_true (unflatten (2, [1;2;3]) = Some [[1;2];[3]])
-TEST_UNIT "unflatten_test1" = assert_true (unflatten (2, [1;2]) = Some [[1;2]])
-TEST_UNIT "unflatten_test1" = assert_true (unflatten (5, [1;2;3;4]) = Some [[1;2;3;4]])
+TEST_UNIT "unflatten_test1" = assert_true (unflatten 0 [1;2;3] = None)
+TEST_UNIT "unflatten_test1" = assert_true (unflatten (-2) [1;2;3] = None)
+TEST_UNIT "unflatten_test1" = assert_true (unflatten 2 [] = Some [[]])
+TEST_UNIT "unflatten_test1" = assert_true (unflatten 2 [1;2;3] = Some [[1;2];[3]])
+TEST_UNIT "unflatten_test1" = assert_true (unflatten 2 [1;2] = Some [[1;2]])
+TEST_UNIT "unflatten_test1" = assert_true (unflatten 5 [1;2;3;4] = Some [[1;2;3;4]])
 
 
 TEST_UNIT "int_of_roman_test1" = assert_true (int_of_roman [L] = 50)
