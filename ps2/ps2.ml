@@ -38,4 +38,8 @@ let concat_right (lst: string list) : string =
 
 
 let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
-    List.
+    let length (lst : 'a list) : int =
+        List.fold_left(fun a _ -> a+1) 0 lst in
+    match lst with
+    [] -> []
+    |x::xs -> List.fold_left (fun a x -> (x+length(a))::a) [] lst 
