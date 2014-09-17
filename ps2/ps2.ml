@@ -88,4 +88,13 @@ let show (m: matrix): unit =
             () v in
     List.fold_left (fun acc x -> print_vector(x)) () m 
 
-let insert_col (m: matrix) (v: vector): matrix =
+let insert_col (m: matrix) (v: vector) : matrix = 
+    let rm_first (v': vector) (row: vector) : (matrix * vector) =
+        match v' with 
+        [] -> ([[]], [])
+        |h::t -> [[([h]@row)]], t) in
+
+    List.fold_left 
+        (fun dft a -> rm_first(dft, a)) ([], v) m 
+
+
