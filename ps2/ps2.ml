@@ -3,6 +3,8 @@ type 'a exprTree =
 | Unop of ('a -> 'a) * 'a exprTree
 | Binop of ('a -> 'a -> 'a) * 'a exprTree * 'a exprTree
 
+type vector = int list
+type matrix = vector list
 
 let rec count_ops (tree: 'a exprTree): int =
 	match tree with
@@ -45,13 +47,9 @@ let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
     |x::xs -> List.fold_left (fun a x -> (x+length(a))::a) [] lst 
 
 
-let insert_col (m: matrix) (v: vector) : matrix = 
-	let rm_first (v': vector) (row: vector) : (matrix * vector) =
-		match v' with 
-		[] -> ([[]], [])
-		|h::t -> [[([h]@row)]], t) in
-
-	List.fold_left 
-		(fun dft a -> rm_first(dft, a)) ([], v) m 
-
-
+    let insert_col (m: matrix) (v: vector) : matrix = 
+    	let rm_first (v': vector) (row: vector) : (vector * vector) =
+    		match v' with 
+    		[] -> ([], [])
+    		|h::t -> ((row@[h]), t) in
+    	List.fold_left (fun dft rows -> rm_first( (snd(dft)) rows )::(fst(dft)) ) ([], v) m
