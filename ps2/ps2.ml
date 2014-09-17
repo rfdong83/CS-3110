@@ -43,3 +43,15 @@ let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
     match lst with
     [] -> []
     |x::xs -> List.fold_left (fun a x -> (x+length(a))::a) [] lst 
+
+
+let insert_col (m: matrix) (v: vector) : matrix = 
+	let rm_first (v': vector) (row: vector) : (matrix * vector) =
+		match v' with 
+		[] -> ([[]], [])
+		|h::t -> [[([h]@row)]], t) in
+
+	List.fold_left 
+		(fun dft a -> rm_first(dft, a)) ([], v) m 
+
+
