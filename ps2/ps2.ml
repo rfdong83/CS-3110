@@ -46,7 +46,8 @@ let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
         List.fold_left(fun a _ -> a+1) 0 lst in
     match lst with
     [] -> []
-    |x::xs -> List.rev(List.fold_left (fun a x -> (x+length(a))::a) [] lst) 
+    |_ -> List.rev(List.fold_left (fun acc b -> 
+              (f (length(acc)) b)::acc) [] lst)
 
 
 let outline (lst: string list) : string list =
