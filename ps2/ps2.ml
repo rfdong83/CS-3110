@@ -111,6 +111,7 @@ let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
     |_ -> List.rev(List.fold_left (fun acc b -> 
               (f (length(acc)) b)::acc) [] lst)
 
+
 (**
  * Takes a string list lst and produces a numbered outline by using mapi_lst
  * to prepend a number, period, and space to each element in lst.
@@ -139,6 +140,7 @@ let scan_left (f: 'a -> 'b -> 'a) (acc: 'a) (lst: 'b list) : 'a list =
     |_ -> List.rev(List.fold_left (fun a b-> 
               (f (List.hd(a)) b)::a) [acc] lst)
 
+
 (**
  * Returns a list that showcases the accumulator acc everytime function f
  * is applied to list lst from the right using fold_right.
@@ -164,6 +166,7 @@ let countup ( n : int ) : int list =
         if i <=1 then l
         else countup' (i -1) ( i :: l )
             in countup'  n []
+
 
 (**
  * Takes an integer n and returns the list of [1!; 2!; ... n!]
