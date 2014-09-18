@@ -308,4 +308,7 @@ let all_vars_unique (p: pat) : bool =
         | h::t -> (List.mem h t) || has_dups t in
     not (has_dups (extract_names p))
 
+
+let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
+    match  
     
