@@ -21,7 +21,7 @@ type value =
 | TupleVal of value list
 | StructorVal of string * value option
 
-type bindings = ( string * value ) list option
+type bindings = (string * value) list option
 
 (**
  * Takes an expression tree and returns the number of operations in it.
@@ -315,5 +315,14 @@ let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
         None
     else
         Some (List.flatten (List.map (rm_some) (solver (f) lst)))
+
+
+let match_pat (v: vector), (p: pat) : bindings =
+    match (v,p) with
+    | (_, WCPat) -> Some []
+    | (_, VarPat) -> Some 
+
+
+
 
 
