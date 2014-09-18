@@ -6,6 +6,8 @@ type 'a exprTree =
 type vector = int list
 type matrix = vector list
 
+exception MatrixFailure of string
+
 let rec count_ops (tree: 'a exprTree): int =
 	match tree with
     |Val _ -> 0
@@ -44,12 +46,35 @@ let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
         List.fold_left(fun a _ -> a+1) 0 lst in
     match lst with
     [] -> []
-    |x::xs -> List.fold_left (fun a x -> (x+length(a))::a) [] lst 
+    |x::xs -> List.rev(List.fold_left (fun a x -> (x+length(a))::a) [] lst) 
 
 
-    let insert_col (m: matrix) (v: vector) : matrix = 
-    	let rm_first (v': vector) (row: vector) : (vector * vector) =
-    		match v' with 
-    		[] -> ([], [])
-    		|h::t -> ((row@[h]), t) in
-    	List.fold_left (fun dft rows -> rm_first( (snd(dft)) rows )::(fst(dft)) ) ([], v) m
+let insert_col (m: matrix) (v: vector) : matrix = 
+    let rm_first (v': vector) (row: vector) : (vector * vector) =
+        match v' with 
+        |[] -> ([], [])
+        |h::t -> ((row@[h]), t) in
+
+    if not (List.length(m) = List.length(v)) then
+        raise (MatrixFailure "Incompatible")
+    else
+        List.rev(
+            fst(
+               List.fold_left(
+                    fun dft rows -> (fst(rm_first (snd(dft)) rows)::fst(dft),
+                        snd((rm_first (snd(dft)) rows))))
+                    ([], v) 
+                    m))
+
+
+let transpose (m: matrix) : matrix = 
+    let accumulator (m': matrix) : matrix =
+        match m' with
+        |[] -> [[]]
+        |h::t -> List.fold_left (fun acc _ -> []::acc) [] h in
+    List.fold_left (fun acc x -> (insert_col acc x)) (accumulator(m)) m
+
+let add_matricies (m1: matrix) (m2: matrix) : matrix = 
+    let add_vector ((v1: vector), (v2: vector)) : vector =
+        match (v1,v2) with
+        | ([],[]) -> raise (MatrixFailure "Empty Matrix")
