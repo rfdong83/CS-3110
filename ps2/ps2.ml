@@ -104,12 +104,19 @@ let concat_right (lst: string list) : string =
  *)
 let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
     (** HELPER: returns the length of a list by using fold_left *)
-    let length (lst : 'a list) : int =
+    let length (lst : 'b list) : int =
         List.fold_left(fun a _ -> a+1) 0 lst in
-    match lst with
-    [] -> []
-    |_ -> List.rev(List.fold_left (fun acc b -> 
-              (f (length(acc)) b)::acc) [] lst)
+    
+    List.rev(List.fold_left (fun (acc: 'b list) (a: 'a) -> 
+              (f (length(acc)) a)::acc) [] lst)
+
+
+
+let map_lst (f : 'a -> 'b) (lst: 'a list) : 'b list =
+    (** HELPER: returns the length of a list by using fold_left *)
+
+    List.rev(List.fold_left (fun (acc: 'b list) (a: 'a) -> 
+              (f a)::acc) [] lst)
 
 
 (**
@@ -309,6 +316,7 @@ let all_vars_unique (p: pat) : bool =
     not (has_dups (extract_names p))
 
 
-let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
+(*let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
     match  
     
+*)
