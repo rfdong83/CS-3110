@@ -74,7 +74,26 @@ let transpose (m: matrix) : matrix =
         |h::t -> List.fold_left (fun acc _ -> []::acc) [] h in
     List.fold_left (fun acc x -> (insert_col acc x)) (accumulator(m)) m
 
+
 let add_matricies (m1: matrix) (m2: matrix) : matrix = 
-    let add_vector ((v1: vector), (v2: vector)) : vector =
-        match (v1,v2) with
-        | ([],[]) -> raise (MatrixFailure "Empty Matrix")
+    let add_vector (v1: vector) (v2: vector) : vector =
+            List.rev(List.fold_left2 (fun acc a1 a2 -> (a1+a2)::acc) [] v1 v2) in
+    if not(List.length(m1) = List.length(m2)) then
+        raise (MatrixFailure "Incompatible Matricies")
+    else
+        List.rev(List.fold_left2 (fun acc v1 v2 -> (add_vector v1 v2)::acc) [] m1 m2)
+
+
+let multiply_matricies (m1: matrix) (m2: matrix) : matrix = 
+    
+    let dot_product (v1: vector) (v2: vector) : int =
+        List.fold_left2 (fun acc a1 a2 -> (a1*a2)+acc) 0 v1 v2 in
+    let row_by_row (v: vector) (m: matrix) : vector =
+        List.rev(List.fold_left (fun acc x -> (dot_product v x)::acc) [] m) in
+    if not(List.length(m1) = List.length((transpose(m2)))) then
+        raise (MatrixFailure "Incompatible Matricies")
+    else
+        List.rev(List.fold_left (fun acc x -> (row_by_row x (transpose(m2)))::acc) [] m1)
+        
+        
+
