@@ -1,6 +1,9 @@
 open Ps2
 open Assertions
 
+let tester (a: int) : 'b list option =
+    if a mod 2 = 0 then Some [a] else None
+    
 TEST_UNIT "count_ops_test1" = assert_true (count_ops (Val 2) = 0)
 TEST_UNIT "count_ops_test2" = assert_true (count_ops (Unop ((~-), Val 3)) = 1)
 TEST_UNIT "count_ops_test3" = assert_true (count_ops (Binop ((+), Val 2, Val 3)) = 1)

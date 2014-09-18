@@ -317,12 +317,37 @@ let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
         Some (List.flatten (List.map (rm_some) (solver (f) lst)))
 
 
-let match_pat (v: vector), (p: pat) : bindings =
+let rec match_pat ((v: value), (p: pat)) : bindings =
+    let rm_some (b: 'b list option) : 'b list =
+        match b with
+        |None -> []
+        |Some x -> x in
+
+
+    let sweeper (v': value list) (p': pat list) : bindings list = 
+        List.rev(List.fold_left2 (fun acc v p -> (match_pat (v,p))::acc) [] v' p') in
+
+
+    let opt_matcher ((somev: value option),(somep: pat option)) : bindings =
+        match (somev, somep) with
+        | (Some v, Some p) -> match_pat(v,p)
+        | (None, None) -> Some []
+        | _ -> None in
+
+
     match (v,p) with
     | (_, WCPat) -> Some []
-    | (_, VarPat) -> Some 
-
-
-
-
-
+    | (_, VarPat s) -> Some [(s,v)]
+    | (UnitVal, UnitPat) -> Some []
+    | (ConstVal i, ConstPat j) -> if i=j then Some [] else None
+    | (TupleVal vals, TuplePat pats) -> 
+        if List.length(vals) = List.length(pats) then 
+            Some (List.flatten (List.map (rm_some) (sweeper vals pats)))
+        else 
+            None 
+    | (StructorVal (s, vopt), StructorPat (s', popt)) -> 
+        if s = s' then 
+            opt_matcher (vopt, popt)
+        else 
+            None
+    | _ -> None
