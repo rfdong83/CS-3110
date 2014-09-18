@@ -111,14 +111,6 @@ let mapi_lst (f : int -> 'a -> 'b) (lst: 'a list) : 'b list =
               (f (length(acc)) a)::acc) [] lst)
 
 
-
-let map_lst (f : 'a -> 'b) (lst: 'a list) : 'b list =
-    (** HELPER: returns the length of a list by using fold_left *)
-
-    List.rev(List.fold_left (fun (acc: 'b list) (a: 'a) -> 
-              (f a)::acc) [] lst)
-
-
 (**
  * Takes a string list lst and produces a numbered outline by using mapi_lst
  * to prepend a number, period, and space to each element in lst.
@@ -142,10 +134,8 @@ let outline (lst: string list) : string list =
  * Returns: a list with every value the accumulator takes during the process
  *)
 let scan_left (f: 'a -> 'b -> 'a) (acc: 'a) (lst: 'b list) : 'a list =
-    match lst with 
-    |[] -> [acc]
-    |_ -> List.rev(List.fold_left (fun a b-> 
-              (f (List.hd(a)) b)::a) [acc] lst)
+    List.rev(List.fold_left (fun a b-> 
+        (f (List.hd(a)) b)::a) [acc] lst)
 
 
 (**
@@ -157,10 +147,8 @@ let scan_left (f: 'a -> 'b -> 'a) (acc: 'a) (lst: 'b list) : 'a list =
  * Returns: a list with every value the accumulator takes during the process
  *)
 let scan_right (f: 'a -> 'b -> 'b) (lst: 'a list) (acc: 'b) : 'b list =
-    match lst with 
-    |[] -> [acc]
-    |_ -> List.rev(List.fold_right (fun a b-> 
-              (f a (List.hd(b)))::b) lst [acc])
+    List.rev(List.fold_right (fun a b-> 
+        (f a (List.hd(b)))::b) lst [acc])
 
 
 (* requires : n >= 1
@@ -316,7 +304,16 @@ let all_vars_unique (p: pat) : bool =
     not (has_dups (extract_names p))
 
 
-(*let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
-    match  
-    
-*)
+let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
+    let solver (f: 'a -> 'b list option) (lst': 'a list) : 'b list option list =
+        List.fold_left (fun acc x -> (f x)::acc) [] lst' in
+    let rm_some (b: 'b list option) : 'b list =
+        match b with
+        |None -> []
+        |Some x -> x in
+    if List.mem None (solver (f) lst) then
+        None
+    else
+        Some (List.flatten (List.map (rm_some) (solver (f) lst)))
+
+
