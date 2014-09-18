@@ -302,5 +302,10 @@ let all_vars_unique (p: pat) : bool =
         | TuplePat ps -> List.fold_left (fun acc exp -> (extract_names exp)@acc) [] ps
         | StructorPat (_, Some p) -> extract_names p
         | _ -> [] in
-    let has_dups (lst: 'a list) : bool 
-        
+    let rec has_dups (lst: 'a list) : bool =
+        match lst with
+        | [] -> false
+        | h::t -> (List.mem h t) || has_dups t in
+    not (has_dups (extract_names p))
+
+    
