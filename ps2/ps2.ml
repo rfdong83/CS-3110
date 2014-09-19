@@ -438,5 +438,5 @@ let first_answer (f: 'a -> 'b option) (lst: 'a list) : 'b =
 let match_pats ((v: value), (pats: pat list)) : bindings =
     match List.filter (fun a -> not(a = None)) 
         (List.rev(List.fold_left(fun acc p -> match_pat (v,p)::acc) [] pats)) with
-    |[] -> raise (NoAnswer "Nothing worked")
+    |[] -> None
     |h::t -> h

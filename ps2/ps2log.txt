@@ -1,0 +1,245 @@
+commit b6d884b17c70aa758d76fe4357992ac5f9e34f07
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 23:42:17 2014 -0400
+
+    finishing ps2_test.ml
+
+ ps2/ps2_test.ml | 57 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 53 insertions(+), 4 deletions(-)
+
+commit 332a5686ef40516c93e8b016b6a7b2ef66fb0196
+Author: Ryan <rfd83@cornell.edu>
+Date:   Thu Sep 18 20:56:18 2014 -0400
+
+    ONE MORE T OGO
+
+ ps2/ps2.ml | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+commit fe8471185e2270d083b9831cfa91340f44e5b000
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 18:28:11 2014 -0400
+
+    almost done with match_pat
+
+ ps2/ps2.ml      | 33 +++++++++++++++++++++++++++++----
+ ps2/ps2_test.ml |  3 +++
+ 2 files changed, 32 insertions(+), 4 deletions(-)
+
+commit 3108c456e786ae63344d4231b2fe723ab8792c9e
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 16:59:45 2014 -0400
+
+    starting on match_pat
+
+ ps2/ps2.ml | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+commit 94f569e3b8f77dbd4f55d4b39d524f2a0e7bc12f
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 16:30:47 2014 -0400
+
+    finished with all_answers
+
+ ps2/ps2.ml | 37 +++++++++++++++++--------------------
+ 1 file changed, 17 insertions(+), 20 deletions(-)
+
+commit 392b6ce59e413cd8f4f423ef0425f11dae5834e4
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 15:26:37 2014 -0400
+
+    fixed mapi_list
+
+ ps2/ps2.ml | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+commit 48661f4e0123604e10837f467821f44d8f756d34
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 15:04:41 2014 -0400
+
+    finished all_vars_unique
+
+ ps2/ps2.ml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 80b70b96ade840088bff3d761fcaaf856d4a00f9
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 18 14:44:27 2014 -0400
+
+    finished all_vars_unique
+
+ ps2/ps2.ml | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+commit 637bbd02a96bc13e66ab85ed3ce8685913aeb393
+Merge: dabec24 66ce00b
+Author: Ryan <rfd83@cornell.edu>
+Date:   Thu Sep 18 12:56:22 2014 -0400
+
+    merging
+
+commit dabec24645883280dd869d347eea149d70a2a9d7
+Author: Ryan <rfd83@cornell.edu>
+Date:   Thu Sep 18 12:49:46 2014 -0400
+
+    up to extract
+
+ ps2/ps2.ml      | 188 +++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ ps2/ps2_test.ml |  64 +++++++++++++++++++
+ 2 files changed, 238 insertions(+), 14 deletions(-)
+
+commit fa06aa7f7c22e1564481ca9690e65228aae338e7
+Author: Ryan <rfd83@cornell.edu>
+Date:   Wed Sep 17 23:01:15 2014 -0400
+
+    actual fixes for real
+
+ ps2/ps2.ml | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 63dc62d5ac1d8562de4d3a29bc41f881f19ce94c
+Author: Ryan <rfd83@cornell.edu>
+Date:   Wed Sep 17 22:57:02 2014 -0400
+
+    fixed all of ps2, up to exercise 4
+
+ ps2/ps2.ml | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+commit 1f4af760a41394519fa270a3711d0b331b9b88d8
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Wed Sep 17 22:52:10 2014 -0400
+
+    exercise 3 done
+
+ ps2/ps2.ml | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
+
+commit a7f907d635973c1ecf54a4f8a6379c7c50532394
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Wed Sep 17 21:06:19 2014 -0400
+
+    finished up to transpose
+
+ ps2/ps2.ml | 43 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 34 insertions(+), 9 deletions(-)
+
+commit 78d139dfdff56d19db993749096fdc61baf6ec84
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Wed Sep 17 18:58:33 2014 -0400
+
+    worked up to insert_col, no scans
+
+ ps2/ps2.ml | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+commit 66ce00bea1550c08c7e241ac46802cf5a3b99926
+Merge: 726dddc 3e04da1
+Author: Ryan <rfd83@cornell.edu>
+Date:   Wed Sep 17 16:07:14 2014 -0400
+
+    merging
+
+commit 726dddc2a7053e7764ca3f9d6ca179e8c2d9d7c4
+Author: Ryan <rfd83@cornell.edu>
+Date:   Wed Sep 17 16:01:34 2014 -0400
+
+    finished insert_col
+
+ ps2/ps2.ml | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+commit 3e04da1a9cead838daebde00842489dee1f626d5
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Wed Sep 17 15:47:55 2014 -0400
+
+    insert_col prototype
+
+ ps2/ps2.ml | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+commit bb7d7fc82fc8bacdd7e2112655b4627e42b1358f
+Author: Ryan <rfd83@cornell.edu>
+Date:   Wed Sep 17 15:44:48 2014 -0400
+
+    ps2 up to show, working
+
+ ps2/ps2.ml | 48 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 47 insertions(+), 1 deletion(-)
+
+commit 522d2b47adfee4c8194702222e5245df6ad5408b
+Author: Ryan <rfd83@cornell.edu>
+Date:   Tue Sep 16 17:22:57 2014 -0400
+
+    ps2 changes
+
+ ps2/ps2.ml | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+commit 74157ed7b6e4f9450c24ad6fcd3a605e9cec4c0e
+Author: Ryan <rfd83@cornell.edu>
+Date:   Tue Sep 16 00:55:24 2014 -0400
+
+    ps2
+
+ ps2/ps2.ml   | 43 +++++++++++++++++++++++++++++++++++++++++--
+ ps2/test.txt |  1 -
+ 2 files changed, 41 insertions(+), 3 deletions(-)
+
+commit 8c7cd52388c818735a85405d0ffd723cc140b0bf
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Mon Sep 15 15:14:22 2014 -0400
+
+    test
+
+ ps2/ps2.ml   | 2 ++
+ ps2/test.txt | 1 +
+ 2 files changed, 3 insertions(+)
+
+commit be0d55601eec8550fe49bfdf773ad2757cbfb4ed
+Author: Ryan <rfd83@cornell.edu>
+Date:   Fri Sep 12 12:03:19 2014 -0400
+
+    ps1 fix
+
+ ps1/ps1.ml      |  2 +-
+ ps1/ps1_test.ml | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+commit 6d12bad209acfdee53be60ad2fa70b1c57b331e4
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Thu Sep 11 04:51:22 2014 -0400
+
+    Delete ps1
+
+ ps1/ps1 | 6 ------
+ 1 file changed, 6 deletions(-)
+
+commit a196975dc0cd5ae79283520114127bb86a6e1aab
+Author: Ryan <rfd83@cornell.edu>
+Date:   Thu Sep 11 04:50:06 2014 -0400
+
+    ps1 log
+
+ ps1/ps1log.txt | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+commit 910c9adb2b8a860d5856597825231572b8b609c5
+Author: Ryan <rfd83@cornell.edu>
+Date:   Thu Sep 11 04:31:06 2014 -0400
+
+    Ps1
+
+ ps1/ps1         |   6 +++
+ ps1/ps1.ml      | 126 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ps1/ps1_test.ml |  45 ++++++++++++++++++++
+ 3 files changed, 177 insertions(+)
+
+commit 8b3396be187b46b0087514bdccb8bc7b5c155a45
+Author: rfdong83 <rfd83@cornell.edu>
+Date:   Sun Sep 7 01:13:43 2014 -0400
+
+    Initial commit
+
+ README.md | 2 ++
+ 1 file changed, 2 insertions(+)
