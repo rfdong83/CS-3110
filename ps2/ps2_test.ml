@@ -113,4 +113,6 @@ TEST_UNIT "match_pat_test7" = assert_true (match_pat ((StructorVal("hi", (Some (
 TEST_UNIT "first_answer_test1" = assert_true (first_answer tester4 [1;2;3;4] = 1)
 TEST_UNIT "first_answer_test2" = assert_true (first_answer tester5 [1;2;3;4] = 2)
 
-TEST_UNIT "match_pats_test1" = assert_true ( match_pat ((UnitVal) , [UnitPat]) = Some [] )
+TEST_UNIT "match_pats_test1" = assert_true ( match_pats ((UnitVal), [UnitPat]) = Some [])
+TEST_UNIT "match_pats_test2" = assert_true ( match_pats ((UnitVal), [ConstPat 1]) = None)
+
