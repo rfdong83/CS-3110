@@ -5,7 +5,6 @@ type 'a exprTree =
 
 type vector = int list
 type matrix = vector list
-exception MatrixFailure of string
 
 type pat =
 | WCPat (*" wildcard " , i.e. , underscore *)
@@ -22,6 +21,9 @@ type value =
 | StructorVal of string * value option
 
 type bindings = (string * value) list option
+
+exception MatrixFailure of string
+exception NoAnswer of string
 
 (**
  * Takes an expression tree and returns the number of operations in it.
@@ -318,10 +320,10 @@ let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
 
 
 let rec match_pat ((v: value), (p: pat)) : bindings =
-    let rm_some (b: 'b list option) : 'b list =
-        match b with
-        |None -> []
-        |Some x -> x in
+    let rm_something (b: 'b list option) : 'b list =
+            match b with
+            |None -> []
+            |Some x -> x in
 
 
     let sweeper (v': value list) (p': pat list) : bindings list = 
@@ -342,7 +344,10 @@ let rec match_pat ((v: value), (p: pat)) : bindings =
     | (ConstVal i, ConstPat j) -> if i=j then Some [] else None
     | (TupleVal vals, TuplePat pats) -> 
         if List.length(vals) = List.length(pats) then 
-            Some (List.flatten (List.map (rm_some) (sweeper vals pats)))
+            if List.mem None (sweeper vals pats) then
+            None
+            else
+            Some (List.flatten (List.map (rm_something) (sweeper vals pats)))   
         else 
             None 
     | (StructorVal (s, vopt), StructorPat (s', popt)) -> 
@@ -351,3 +356,12 @@ let rec match_pat ((v: value), (p: pat)) : bindings =
         else 
             None
     | _ -> None
+
+let first_answer (f: 'a -> 'b option) (lst: 'a list) : 'b = 
+    let getter (x: 'b option): 'b =
+        match x with
+        |Some y -> y 
+        |None -> raise (NoAnswer "Nothing to see here") in
+    match List.filter (fun a -> not (a = None)) (List.map (f) lst) with
+    |[] -> raise (NoAnswer "Nothing worked")
+    |h::t -> getter h
