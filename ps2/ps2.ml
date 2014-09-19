@@ -269,7 +269,13 @@ let multiply_matricies (m1: matrix) (m2: matrix) : matrix =
     else
         List.rev(List.fold_left (fun acc x -> (row_by_row x (transpose(m2)))::acc) [] m1)
         
-
+(**
+ * Cycles through pattern p and runs f1 or f2 on a WCPat or 
+ * VarPat, respectively.
+ *
+ * Requires: f1 and f2 are functions, p is a pattern
+ * Returns: an output based on f1 and f2 on whatever p is
+ *)
 let rec z f1 f2 p =
   let r = z f1 f2 in
     match p with
@@ -279,26 +285,54 @@ let rec z f1 f2 p =
     | StructorPat (_,Some p) -> r p
     | _ -> 0      
 
-
+(**
+ * Counts the number of WCPats in pattern p
+ *
+ * Requires: p is a pattern
+ * Returns: an int counting the number of WCPats in p
+ *)
 let count_wcs (p: pat) : int =
     z (fun x -> 1) (fun s -> 0) p
 
 
+(**
+ * Returns the sum of the number of wildcards and 
+ * the total length of variable names in pattern p
+ *
+ *
+ * Requires: p is a pattern
+ * Returns: an int depicting the number of wildcards + length of all variable names
+ *)
 let count_wcs_and_var_lengths (p: pat) : int =
     z (fun x -> 1) (fun s -> String.length s) p
 
-
+(**
+ * Returns the number of occurences of variable name var_name
+ * in pattern p
+ *
+ * Requires: var_name is a string, p is a pattern
+ * Returns: an int of the number of appearances of var_name in p
+ *)
 let count_var (var_name: string) (p: pat) : int =
     z (fun x -> 0) (fun s -> if s=var_name then 1 else 0) p
 
-
+(**
+ * Returns true if all variables in pattern p have unique
+ * names or not, and false otherwise.
+ *
+ * Requires: p is a pattern
+ * Returns: true or false depending on whether all variables in p
+ *          are unique
+ *)
 let all_vars_unique (p: pat) : bool =
+    (**HELPER: produces a list of all the variable names in pattern p *)
     let rec extract_names (p: pat) : string list =
         match p with 
         | VarPat x -> [x]
         | TuplePat ps -> List.fold_left (fun acc exp -> (extract_names exp)@acc) [] ps
         | StructorPat (_, Some p) -> extract_names p
         | _ -> [] in
+    (**HELPER: returns true if duplicates exist in lst, false otherwise *)
     let rec has_dups (lst: 'a list) : bool =
         match lst with
         | [] -> false
@@ -306,9 +340,21 @@ let all_vars_unique (p: pat) : bool =
     not (has_dups (extract_names p))
 
 
+(**
+ * Implements a function f to every element in lst lst to return
+ * Some list, and then takes each list and appends them together to 
+ * some list l, then returns Some l.
+ *
+ * Requires: f is a function that takes an element from lst and returns
+ *           Some list, and lst is a list
+ * Returns: Some list that contains the answers to all the function's outputs
+ *         on lst
+ *)
 let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
+    (**HELPER: applies f to every element in lst and generates list of outputs*)
     let solver (f: 'a -> 'b list option) (lst': 'a list) : 'b list option list =
         List.fold_left (fun acc x -> (f x)::acc) [] lst' in
+    (**HELPER: removes Some from every element in a list*)
     let rm_some (b: 'b list option) : 'b list =
         match b with
         |None -> []
@@ -319,24 +365,31 @@ let all_answers (f: 'a -> 'b list option) (lst: 'a list) : 'b list option =
         Some (List.flatten (List.map (rm_some) (solver (f) lst)))
 
 
+(**
+ * Checks whether or not a value matches a pattern. Matching is depicted by 
+ * the description on ps2.pdf. If it matches and produces a binding, then 
+ * a list of bindings is returned, otherwise None.
+ *
+ * Requires: v is a value, and p is a pattern
+ * Returns: bindings if the matching was successful, None otherwise
+ *)
 let rec match_pat ((v: value), (p: pat)) : bindings =
+    (**HELPER: removes Some from every element in a list *)
     let rm_something (b: 'b list option) : 'b list =
             match b with
             |None -> []
             |Some x -> x in
-
-
+    (**HELPER: checks to see if every element in v matches its corresponding 
+    index in p *)
     let sweeper (v': value list) (p': pat list) : bindings list = 
-        List.rev(List.fold_left2 (fun acc v p -> (match_pat (v,p))::acc) [] v' p') in
-
-
+        List.rev(List.fold_left2 (fun acc v p -> 
+                                 (match_pat (v,p))::acc) [] v' p') in
+    (**HELPER: checks to see if StructorVal matches StructorPat *)
     let opt_matcher ((somev: value option),(somep: pat option)) : bindings =
         match (somev, somep) with
         | (Some v, Some p) -> match_pat(v,p)
         | (None, None) -> Some []
         | _ -> None in
-
-
     match (v,p) with
     | (_, WCPat) -> Some []
     | (_, VarPat s) -> Some [(s,v)]
@@ -357,7 +410,15 @@ let rec match_pat ((v: value), (p: pat)) : bindings =
             None
     | _ -> None
 
+(**
+ * Applies function f to every element in list lst, and on the first
+ * non-None output (Some v), returns v.
+ *
+ * Requires: f is a function that can be applied to each element in lst
+ * Returns: The first output of f that isn't None with Some removed
+ *)
 let first_answer (f: 'a -> 'b option) (lst: 'a list) : 'b = 
+    (**HELPER: Returns only the x in Some x *)
     let getter (x: 'b option): 'b =
         match x with
         |Some y -> y 
@@ -365,3 +426,17 @@ let first_answer (f: 'a -> 'b option) (lst: 'a list) : 'b =
     match List.filter (fun a -> not (a = None)) (List.map (f) lst) with
     |[] -> raise (NoAnswer "Nothing worked")
     |h::t -> getter h
+
+(**
+ * Takes value v and checks whether it matches any of the patterns in the
+ * list pats. Upon the first match, return the bindings it generates, and 
+ * returns None if nothing matched
+ *
+ * Requires: v is a value, pats is a list of patterns
+ * Returns: bindings as a result of v matching a pattern in pats, or None
+ *)
+let match_pats ((v: value), (pats: pat list)) : bindings =
+    match List.filter (fun a -> not(a = None)) 
+        (List.rev(List.fold_left(fun acc p -> match_pat (v,p)::acc) [] pats)) with
+    |[] -> raise (NoAnswer "Nothing worked")
+    |h::t -> h
