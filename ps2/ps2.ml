@@ -23,7 +23,7 @@ type value =
 type bindings = (string * value) list option
 
 exception MatrixFailure of string
-exception NoAnswer of string
+exception NoAnswer 
 
 (**
  * Takes an expression tree and returns the number of operations in it.
@@ -239,7 +239,7 @@ let transpose (m: matrix) : matrix =
  * Requires: m1 and m2 are both matricies with equivalent size
  * Returns: a matrix that is the sum of m1 and m2
  *)
-let add_matricies (m1: matrix) (m2: matrix) : matrix = 
+let add_matrices (m1: matrix) (m2: matrix) : matrix = 
     (**HELPER: adds two vectors together, used to fold along the matricies*)
     let add_vector (v1: vector) (v2: vector) : vector =
             List.rev(List.fold_left2 (fun acc a1 a2 -> (a1+a2)::acc) [] v1 v2) in
@@ -257,7 +257,7 @@ let add_matricies (m1: matrix) (m2: matrix) : matrix =
              of m2.
  * Returns: a matrix that is the product of m1 and m2
  *)
-let multiply_matricies (m1: matrix) (m2: matrix) : matrix = 
+let multiply_matrices (m1: matrix) (m2: matrix) : matrix = 
     (**HELPER: returns the dot product of two vectors*)
     let dot_product (v1: vector) (v2: vector) : int =
         List.fold_left2 (fun acc a1 a2 -> (a1*a2)+acc) 0 v1 v2 in
@@ -299,12 +299,12 @@ let count_wcs (p: pat) : int =
  * Returns the sum of the number of wildcards and 
  * the total length of variable names in pattern p
  *
- *
  * Requires: p is a pattern
  * Returns: an int depicting the number of wildcards + length of all variable names
  *)
 let count_wcs_and_var_lengths (p: pat) : int =
     z (fun x -> 1) (fun s -> String.length s) p
+
 
 (**
  * Returns the number of occurences of variable name var_name
@@ -316,6 +316,34 @@ let count_wcs_and_var_lengths (p: pat) : int =
 let count_var (var_name: string) (p: pat) : int =
     z (fun x -> 0) (fun s -> if s=var_name then 1 else 0) p
 
+
+(**
+ * HELPER: produces a list of all the variable names in pattern p 
+ *
+ * Requires: p is a pattern
+ * Returns: a string list containing all the variable names in p
+ *)
+let rec extract_names (p: pat) : string list =
+    match p with 
+    | VarPat x -> [x]
+    | TuplePat ps -> List.fold_left (fun acc exp -> (extract_names exp)@acc) [] ps
+    | StructorPat (_, Some p) -> extract_names p
+    | _ -> [] 
+
+
+(**
+ * HELPER: returns true if the list contains duplicates otherwise false
+ *
+ * Requires: lst is a list
+ * Returns: true or false depending on whether or not all elements in p 
+ *          are unique
+ *)
+let rec has_dups (lst: 'a list) : bool =
+    match lst with
+    | [] -> false
+    | h::t -> (List.mem h t) || has_dups t
+
+
 (**
  * Returns true if all variables in pattern p have unique
  * names or not, and false otherwise.
@@ -325,18 +353,6 @@ let count_var (var_name: string) (p: pat) : int =
  *          are unique
  *)
 let all_vars_unique (p: pat) : bool =
-    (**HELPER: produces a list of all the variable names in pattern p *)
-    let rec extract_names (p: pat) : string list =
-        match p with 
-        | VarPat x -> [x]
-        | TuplePat ps -> List.fold_left (fun acc exp -> (extract_names exp)@acc) [] ps
-        | StructorPat (_, Some p) -> extract_names p
-        | _ -> [] in
-    (**HELPER: returns true if duplicates exist in lst, false otherwise *)
-    let rec has_dups (lst: 'a list) : bool =
-        match lst with
-        | [] -> false
-        | h::t -> (List.mem h t) || has_dups t in
     not (has_dups (extract_names p))
 
 
@@ -422,9 +438,9 @@ let first_answer (f: 'a -> 'b option) (lst: 'a list) : 'b =
     let getter (x: 'b option): 'b =
         match x with
         |Some y -> y 
-        |None -> raise (NoAnswer "Nothing to see here") in
+        |None -> raise (NoAnswer) in
     match List.filter (fun a -> not (a = None)) (List.map (f) lst) with
-    |[] -> raise (NoAnswer "Nothing worked")
+    |[] -> raise (NoAnswer)
     |h::t -> getter h
 
 (**
