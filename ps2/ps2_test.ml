@@ -116,4 +116,3 @@ TEST_UNIT "first_answer_test2" = assert_true (first_answer tester5 [1;2;3;4] = 2
 TEST_UNIT "match_pats_test1" = assert_true ( match_pats ((UnitVal), [UnitPat]) = Some [])
 TEST_UNIT "match_pats_test2" = assert_true ( match_pats ((UnitVal), [ConstPat 1]) = None)
 
-
