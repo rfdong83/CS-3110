@@ -18,7 +18,7 @@ let min_diagonal = 0.0000001
 		     
 exception OutOfBounds
 
-let q1 = Leaf (((0., 0.), (10., 10.)), [(5.,5.),"hi"])
+let q1 = Leaf (((0., 0.), (10., 10.)), [((4.,4.),"hi")])
 let q2 = Leaf (((-10., 0.), (0., 10.)), [])
 let q3 = Leaf (((-10., -10.), (0., 0.)), [])
 let q4 = Leaf (((0., -10.), (10., 0.)), [])
@@ -31,17 +31,22 @@ let new_tree (r:region) : 'a quadtree =
 let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
     let y_midpoint (tree: 'a quadtree) : float =
         match tree with
-        | Node (r, q1, q2, q3, q4) -> 
-             (snd(fst(r)) +. snd(snd(r)))/.2.0
-        | Leaf(r,_) -> 
-             (snd(fst(r)) +. snd(snd(r)))/.2.0 in
+        | Node (((x1,y1),(x2,y2)), q1, q2, q3, q4) -> 
+             (y1 +. y2)/.2.0
+        | Leaf(((x1,y1),(x2,y2)),_) -> 
+             (y1 +. y2)/.2.0 in
 
     let x_midpoint (tree: 'a quadtree) : float =
         match tree with
-        | Node (r,q1,q2,q3,q4) ->
-            (fst(fst(r)) +. fst(snd(r)))/.2.0
-        | Leaf (r,_) -> 
-            (snd(fst(r)) +. snd(snd(r)))/.2.0 in
+        | Node (((x1,y1),(x2,y2)),q1,q2,q3,q4) ->
+            (x1 +. x2)/.2.0
+        | Leaf (((x1,y1),(x2,y2)),_) -> 
+            (x1 +. x2)/.2.0 in
+
+    let contains (r': region) (c: coord) : bool = 
+        match r' with
+        | ((x1, y1), (x2, y2)) -> 
+            fst(c) > x1 && fst(c) < x2 && snd(c) > y1 && snd(c) < y2 in
 
     let check_region (place: coord) (q': 'a quadtree) : int =
         if fst(place) >= x_midpoint(q') then
@@ -56,13 +61,42 @@ let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
                 3 in
 
     let splitter (l: 'a quadtree) : 'a quadtree =
-        match l with 
-        | Leaf (r,_) ->
-            Node (r, 
-                new_tree ((x_midpoint(l), y_midpoint(l)) , snd(r)) , 
-                new_tree ((fst(fst(r)) , y_midpoint(l)) , (x_midpoint(l), snd(snd(r)))) , 
-                new_tree (fst(r) , (x_midpoint(l), y_midpoint(l))) , 
-                new_tree ((x_midpoint(l), snd(fst(r))) , (fst(snd(r)) , y_midpoint(l))) 
+        match l with
+        | Leaf (((x1,y1),(x2,y2)), (spot,obj)::t) ->
+            if (check_region spot l) = 1 then
+                Node (((x1,y1),(x2,y2)),
+                    Leaf (((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , [(spot,obj)]) ,
+                    new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
+                    new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
+                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l)))
+                )
+            else if (check_region spot l) = 2 then
+                Node (((x1,y1),(x2,y2)),
+                    new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
+                    Leaf ((( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , [(spot,obj)]) ,
+                    new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
+                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l)))
+                )
+            else if (check_region spot l) = 3 then
+                Node (((x1,y1),(x2,y2)),
+                    new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
+                    new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
+                    Leaf (((x1,y1) , (x_midpoint(l), y_midpoint(l))) , [(spot,obj)]) ,
+                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l)))
+                )
+            else
+                Node (((x1,y1),(x2,y2)),
+                    new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
+                    new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
+                    new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
+                    Leaf (((x_midpoint(l), y1) , (x2 , y_midpoint(l))) , [(spot,obj)])
+                )
+        | Leaf (((x1,y1),(x2,y2)),_) ->
+            Node (((x1,y1),(x2,y2)), 
+                new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
+                new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
+                new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
+                new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l))) 
             ) 
         | _ -> l in
 
@@ -72,19 +106,24 @@ let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
 
     match q with
     | Leaf (r,lst) ->
-        if List.length(lst) > 0 && diagonal(r) >= min_diagonal then
-            insert (splitter(q)) c s
+        if (contains r c) then
+            if List.length(lst) > 0 && diagonal(r) >= min_diagonal then
+                insert (splitter(q)) c s
+            else
+                Leaf (r, lst @ [(c,s)])
         else
-            Leaf (r, lst @ [(c,s)])
+            Leaf (r,lst)
     | Node (r,t1,t2,t3,t4) ->
-        if (check_region c q) = 1 then
+        Node (r, (insert t1 c s), (insert t2 c s), (insert t3 c s), (insert t4 c s))
+
+        (*if (check_region c q) = 1 then
             insert t1 c s
         else if (check_region c q) = 2 then
             insert t2 c s
         else if (check_region c q) = 3 then
             insert t3 c s
-        else 
-            insert t4 c s
+        else
+            insert t4 c s*)
 
       
 let rec fold_quad (f: 'a -> (coord * 'b)  -> 'a) (a: 'a) (t: 'b quadtree): 'a =
@@ -96,13 +135,16 @@ let rec fold_quad (f: 'a -> (coord * 'b)  -> 'a) (a: 'a) (t: 'b quadtree): 'a =
 
    
 let rec fold_region (f: 'a -> (coord * 'b) -> 'a) (a : 'a) (t : 'b quadtree) (r : region): 'a =
-    let contains (r: region) (c: coord) : bool = 
-        match r with
+    let contains (r': region) (c: coord) : bool = 
+        match r' with
         | ((x1, y1), (x2, y2)) -> 
             fst(c) > x1 && fst(c) < x2 && snd(c) > y1 && snd(c) < y2 in
-    match t with
-    | Leaf (r, h::t) -> 
-        List.fold_left (fun a x -> 
-            if (contains r (fst(h))) then f a x else a) a (h::t)
-    | Node (r,t1,t2,t3,t4) ->
-        fold_region f (fold_region f (fold_region f (fold_region f a t1) t2) t3 ) t4
+    let rec scanner (r': region) (t': 'b quadtree) (accum): (coord * 'b) list =
+        match t' with
+        | Leaf (r, []) -> 
+            accum
+        | Leaf (r, h::t) ->
+            List.rev (List.fold_left (fun a x-> if (contains r' (fst(x))) then  x::a else a) accum (h::t))
+        | Node (r,t1,t2,t3,t4) ->
+            scanner r' t4 (scanner r' t3 (scanner r' t2 (scanner r' t1 accum))) in
+    List.fold_left f a (scanner r t [])
