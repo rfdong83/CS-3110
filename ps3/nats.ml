@@ -74,27 +74,91 @@ module IntNat: NATN = struct
     exception Unrepresentable
 
     let zero = 0
-
     let one = 1
 
-    let ( +- ) (t1: t) (t2: t)=
-        t1+t2
+    let ( +- ) (t1: t) (t2: t) : t =
+        if sum_overflows t1 t2 then raise Unrepresentable else t1 + t2
 
-    let ( *- ) (t1: t) (t2: t)= 
-        t1 * t2
+
+    let ( *- ) (t1: t) (t2: t) : t = 
+        if ((max t1 t2) > t1*t2) 
+            || (t1*t2 = 0 && t1 <> 0 && t2 <> 0)
+            || ((t1*t2) < 0)
+        then raise Unrepresentable else t1 * t2
+
 
     let ( === ) (t1: t) (t2: t) : bool =
         t1 = t2
 
+ 
     let ( < ) (t1: t) (t2: t) : bool =
         t1 < t2  
 
+
     let int_of_nat (num: t) : int =
-        num
+        if sum_overflows zero num then raise Unrepresentable else num
 
-    let nat_of_int (num: int) : t= 
+
+    let nat_of_int (num: int) : t = 
         if num < 0 then raise Unrepresentable else num
-
 
 end
 
+module ListNat: NATN = struct
+    (* The list [a1; ...; an] represents the
+     * natural number n. That is , the list lst represents
+     * length ( lst ). The empty list represents 0. The values of
+     * the list elements are irrelevant . *)
+    type t = int list
+
+    exception Unrepresentable
+
+    let zero = []
+    let one = [1]
+
+    let rec multiplier (count: int) (lst: int list) : int list =
+            match count with
+            | 0 -> lst
+            | _ -> multiplier (count-1) (1::lst) 
+
+    let ( +- ) (t1: t) (t2: t) : t =
+        List.fold_left (fun a x -> x::a) t2 t1
+
+
+    let ( *- ) (t1: t) (t2: t) : t = 
+        List.fold_left (fun a x -> multiplier (List.length t1) a) [] t2
+
+
+    let ( === ) (t1: t) (t2: t) : bool =
+        List.length t1 = List.length t2
+
+ 
+    let ( < ) (t1: t) (t2: t) : bool =
+        List.length t1 < List.length t2  
+
+
+    let int_of_nat (num: t) : int =
+        List.length num
+
+
+    let nat_of_int (num: int) : t = 
+        multiplier num []
+
+end
+
+module NatConvertFn (N: NATN) : NATN = struct 
+    let int_of_nat (n: N.t): int = 
+        N.int_of_nat n
+
+    let nat_of_int (n: int): N.t =
+        N.nat_of_int n
+
+end
+
+module AlienNatFn (M : AlienMapping): NATN = struct
+    type t = M . aliensym list
+    
+    let translate (words: t) : NATN.t = 
+        NATN.nat_of_int(List.fold_left (fun a x -> (M.int_of_aliensym x)+a) 0 words)
+
+end

@@ -78,25 +78,25 @@ let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
         match r with
         | ((x1,y1),(x2,y2)) -> ((x1-.x2)**2.+. (y1-.y2)**2.)**0.5 in
 
-    let out_of_bounds (q: 'a quadtree) (c: coord) : bool =
+    let in_bounds (q: 'a quadtree) (c: coord) : bool =
         match q with
         | Leaf (r,_) -> (contains r c)
         | Node (r,_,_,_,_) -> (contains r c) in 
-
-    if out_of_bounds q c then
+    
+    let rec inserter (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
         match q with
             | Leaf (r,lst) ->
                 if (contains r c) then
                     if List.length(lst) > 0 && diagonal(r) >= min_diagonal then
-                        insert (splitter q) c s
+                        inserter (splitter q) c s
                     else
                         Leaf (r, lst @ [(c,s)])
                 else
                     Leaf (r,lst)
             | Node (r,t1,t2,t3,t4) ->
-                Node (r, (insert t1 c s), (insert t2 c s), (insert t3 c s), (insert t4 c s))
-    else
-        raise OutOfBounds
+                Node (r, (inserter t1 c s), (inserter t2 c s), (inserter t3 c s), (inserter t4 c s)) in
+
+    if in_bounds q c then inserter q c s else raise OutOfBounds
 
 
 let rec fold_quad (f: 'a -> (coord * 'b)  -> 'a) (a: 'a) (t: 'b quadtree): 'a =
@@ -112,7 +112,7 @@ let rec fold_region (f: 'a -> (coord * 'b) -> 'a) (a : 'a) (t : 'b quadtree) (r 
         match r' with
         | ((x1, y1), (x2, y2)) -> 
             fst(c) > x1 && fst(c) < x2 && snd(c) > y1 && snd(c) < y2 in
-    let rec scanner (r': region) (t': 'b quadtree) (accum): (coord * 'b) list =
+    let rec scanner (r': region) (t': 'b quadtree) (accum : (coord * 'b) list ): (coord * 'b) list =
         match t' with
         | Leaf (r, []) -> 
             accum
