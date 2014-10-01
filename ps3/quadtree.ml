@@ -48,84 +48,57 @@ let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
         | ((x1, y1), (x2, y2)) -> 
             fst(c) > x1 && fst(c) < x2 && snd(c) > y1 && snd(c) < y2 in
 
-    let check_region (place: coord) (q': 'a quadtree) : int =
-        if fst(place) >= x_midpoint(q') then
-            if snd(place) >= y_midpoint(q') then
-                1
-            else
-                4
-        else
-            if snd(place) >= y_midpoint(q') then
-                2
-            else
-                3 in
 
     let splitter (l: 'a quadtree) : 'a quadtree =
         match l with
-        | Leaf (((x1,y1),(x2,y2)), (spot,obj)::t) ->
-            if (check_region spot l) = 1 then
-                Node (((x1,y1),(x2,y2)),
-                    Leaf (((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , [(spot,obj)]) ,
-                    new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
+        | Leaf (((x1,y1),(x2,y2)), ((coord,obj)::t)) -> 
+             insert  
+                (Node (((x1,y1),(x2,y2)),
+                    new_tree ((x_midpoint(l), y_midpoint(l)), (x2,y2)) ,
+                    new_tree ((x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
                     new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
-                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l)))
-                )
-            else if (check_region spot l) = 2 then
-                Node (((x1,y1),(x2,y2)),
-                    new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
-                    Leaf ((( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , [(spot,obj)]) ,
+                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l))) 
+                        )
+                    )
+                coord
+                obj
+
+        | Leaf (((x1,y1),(x2,y2)), []) -> 
+            (Node (((x1,y1),(x2,y2)),
+                    new_tree ((x_midpoint(l), y_midpoint(l)), (x2,y2)) ,
+                    new_tree ((x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
                     new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
-                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l)))
-                )
-            else if (check_region spot l) = 3 then
-                Node (((x1,y1),(x2,y2)),
-                    new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
-                    new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
-                    Leaf (((x1,y1) , (x_midpoint(l), y_midpoint(l))) , [(spot,obj)]) ,
-                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l)))
-                )
-            else
-                Node (((x1,y1),(x2,y2)),
-                    new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
-                    new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
-                    new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
-                    Leaf (((x_midpoint(l), y1) , (x2 , y_midpoint(l))) , [(spot,obj)])
-                )
-        | Leaf (((x1,y1),(x2,y2)),_) ->
-            Node (((x1,y1),(x2,y2)), 
-                new_tree ((x_midpoint(l), y_midpoint(l)) , (x2,y2)) , 
-                new_tree (( x1 , y_midpoint(l)) , (x_midpoint(l), y2)) , 
-                new_tree ((x1,y1) , (x_midpoint(l), y_midpoint(l))) , 
-                new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l))) 
-            ) 
+                    new_tree ((x_midpoint(l), y1) , (x2 , y_midpoint(l))) 
+                        )
+                    )
+
         | _ -> l in
 
     let diagonal (r: region) : float =
         match r with
         | ((x1,y1),(x2,y2)) -> ((x1-.x2)**2.+. (y1-.y2)**2.)**0.5 in
 
-    match q with
-    | Leaf (r,lst) ->
-        if (contains r c) then
-            if List.length(lst) > 0 && diagonal(r) >= min_diagonal then
-                insert (splitter(q)) c s
-            else
-                Leaf (r, lst @ [(c,s)])
-        else
-            Leaf (r,lst)
-    | Node (r,t1,t2,t3,t4) ->
-        Node (r, (insert t1 c s), (insert t2 c s), (insert t3 c s), (insert t4 c s))
+    let out_of_bounds (q: 'a quadtree) (c: coord) : bool =
+        match q with
+        | Leaf (r,_) -> (contains r c)
+        | Node (r,_,_,_,_) -> (contains r c) in 
 
-        (*if (check_region c q) = 1 then
-            insert t1 c s
-        else if (check_region c q) = 2 then
-            insert t2 c s
-        else if (check_region c q) = 3 then
-            insert t3 c s
-        else
-            insert t4 c s*)
+    if out_of_bounds q c then
+        match q with
+            | Leaf (r,lst) ->
+                if (contains r c) then
+                    if List.length(lst) > 0 && diagonal(r) >= min_diagonal then
+                        insert (splitter q) c s
+                    else
+                        Leaf (r, lst @ [(c,s)])
+                else
+                    Leaf (r,lst)
+            | Node (r,t1,t2,t3,t4) ->
+                Node (r, (insert t1 c s), (insert t2 c s), (insert t3 c s), (insert t4 c s))
+    else
+        raise OutOfBounds
 
-      
+
 let rec fold_quad (f: 'a -> (coord * 'b)  -> 'a) (a: 'a) (t: 'b quadtree): 'a =
     match t with
     | Leaf (r, lst) -> 
