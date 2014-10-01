@@ -1,3 +1,5 @@
+open nat
+
 module IntNat: NATN = struct
     type t = int
 
@@ -16,10 +18,5 @@ module IntNat: NATN = struct
 
     let ( < ) (t1: t) (t2: t) =
         t1 < t2 
-
-
-
-
-
 
 end
