@@ -14,7 +14,7 @@ module type NATN = sig
     Requires: 2 arguments of type t
     Returns: the sum of the two arguments
   *)
-  val ( +- ) : t -> t -> t
+  val ( + ) : t -> t -> t
   (*Multiplication of natural numbers
       Properties:
         Commutative: a * b = b * a
@@ -23,7 +23,7 @@ module type NATN = sig
     Requires: 2 arguments of type t
     Returns: the product of the two arguments
   *)
-  val ( *- ) : t -> t -> t 
+  val ( * ) : t -> t -> t 
   (*Less-than ordering of natural numbers
     Requires: 2 argumnts of type t
     Returns: true if first argument is less than the second, false otherwise
@@ -76,11 +76,11 @@ module IntNat: NATN = struct
     let zero = 0
     let one = 1
 
-    let ( +- ) (t1: t) (t2: t) : t =
+    let ( + ) (t1: t) (t2: t) : t =
         if sum_overflows t1 t2 then raise Unrepresentable else t1 + t2
 
 
-    let ( *- ) (t1: t) (t2: t) : t = 
+    let ( * ) (t1: t) (t2: t) : t = 
         if ((max t1 t2) > t1*t2) 
             || (t1*t2 = 0 && t1 <> 0 && t2 <> 0)
             || ((t1*t2) < 0)
@@ -121,11 +121,11 @@ module ListNat: NATN = struct
             | 0 -> lst
             | _ -> multiplier (count-1) (1::lst) 
 
-    let ( +- ) (t1: t) (t2: t) : t =
+    let ( + ) (t1: t) (t2: t) : t =
         List.fold_left (fun a x -> x::a) t2 t1
 
 
-    let ( *- ) (t1: t) (t2: t) : t = 
+    let ( * ) (t1: t) (t2: t) : t = 
         List.fold_left (fun a x -> multiplier (List.length t1) a) [] t2
 
 
@@ -138,7 +138,7 @@ module ListNat: NATN = struct
 
 
     let int_of_nat (num: t) : int =
-        List.length num
+        List.length num 
 
 
     let nat_of_int (num: int) : t = 
@@ -154,11 +154,11 @@ module NatConvertFn (N: NATN) : NATN = struct
     let zero = N.zero
     let one = N.one
 
-    let ( +- ) (t1: t) (t2: t) : t =
-        N.( +- ) t1 t2
+    let ( + ) (t1: t) (t2: t) : t =
+        N.( + ) t1 t2
 
-    let ( *- ) (t1: t) (t2: t) : t =
-        N.( *- ) t1 t2
+    let ( * ) (t1: t) (t2: t) : t =
+        N.( * ) t1 t2
 
     let ( === ) (t1: t) (t2: t) : bool =
         N.( === ) t1 t2
@@ -182,26 +182,43 @@ module AlienNatFn (M : AlienMapping): NATN = struct
     let zero = [M.zero]
     let one = [M.one]
 
-    let ( +- ) (t1: t) (t2: t) : t =
+    let ( + ) (t1: t) (t2: t) : t =
         List.fold_left (fun a x -> x::a) t2 t1
 
-    let ( *- ) (t1: t) (t2: t) : t =
-        List.fold_left (fun a x -> x::a) t2 t1
+    let ( * ) (t1: t) (t2: t) : t =
+        let rec multiplies (num: int) (lst: t) : t list =
+            if num = 0 then [] else lst::(multiplies (num-1) lst) in
+
+        List.flatten(List.fold_left 
+            (fun a x -> List.flatten((multiplies (M.int_of_aliensym x) t1))::a)
+            [] 
+            t2
+        )
 
     let ( === ) (t1: t) (t2: t) : bool =
-        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t1) =
-        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t2)
+        (List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x) a) then 
+                                    raise Unrepresentable 
+                                    else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 t1) =
+        (List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x) a) then 
+                                    raise Unrepresentable 
+                                    else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 t2)
 
     let ( < ) (t1: t) (t2: t) : bool =
-        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t1) <
-        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t2)
+        (List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x) a) then 
+                                    raise Unrepresentable 
+                                    else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 t1) <
+        (List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x) a) then 
+                                    raise Unrepresentable 
+                                    else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 t2)
 
     let int_of_nat (n: t) : int =
-        List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 n
+        List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x)  a) then 
+                                    raise Unrepresentable 
+                                    else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 n
 
     let nat_of_int (i: int) : t =
         let rec adder (i: int) (accum: int) (lst: t list) : t list =
-            if accum = i then lst else adder i (accum + 1) (one::lst) in
+            if accum = i then lst else adder i (Pervasives.(+) accum 1) (one::lst) in
         List.flatten (adder i 0 [])
  
 end
