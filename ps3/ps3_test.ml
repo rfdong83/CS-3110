@@ -16,6 +16,10 @@ module AlienTest : AlienMapping = struct
 
 end
 
+module Test1 = NatConvertFn(IntNat) 
+
+(* BEGIN TESTING QUADTREE *)
+
 
 (*Testing regions*)
 let r1 = ((-10.,-10.),(10.,10.))
@@ -107,6 +111,10 @@ TEST_UNIT "fold_region_test3" = assert_true (
 		((-5.,-5.),(5.,5.)) = 0
 )
 
+
+(* FINISH TESTING QUADTREE, BEGIN TESTING CITY_SEARCH *)
+
+
 TEST_UNIT "load_city_data_test" = assert_true (
 	load_city_data "test.csv" = 
 	Quadtree.Node (((-90., -180.), (90., 180.)),                                     Quadtree.Node (((0., 0.), (90., 180.)),                                        
@@ -128,9 +136,232 @@ TEST_UNIT "city_search_test" = assert_true (
 TEST_UNIT "city_search_test2" = assert_true (
 	city_search (load_city_data "ithaca.csv") ((0.,0.),(1.,1.)) = []
 )
-(*
-leEST_UNIT "city_search_test" =
-assert_true (match l with
-    |["Fall Creek School"] -> true 
-    |_-> false)
-*)
+
+(* FINISH TESTING QUADTREE, BEGIN TESTING INTNAT *)
+
+
+TEST_UNIT "int_of_nat_test1" = let open IntNat in assert_true (
+	int_of_nat zero = 0
+)
+
+TEST_UNIT "int_of_nat_test2" = let open IntNat in assert_true (
+	int_of_nat one = 1
+)
+
+TEST_UNIT "nat_of_int_test1" = let open IntNat in assert_true (
+	nat_of_int 0 = zero
+)
+
+TEST_UNIT "nat_of_int_test2" = let open IntNat in assert_true (
+	nat_of_int 1 = one
+)
+
+TEST_UNIT "( + )_test1" = let open IntNat in assert_true (
+	int_of_nat ( ( + ) (nat_of_int 34) (nat_of_int 666) ) = 700
+)
+
+TEST_UNIT "( + )_test2" = let open IntNat in assert_true (
+	( + ) zero one  = one
+)
+
+TEST_UNIT "( + )_test3" = let open IntNat in assert_true (
+	( + ) zero one  = ( + ) one zero
+)
+
+TEST_UNIT "( + )_test4" = let open IntNat in assert_true (
+	( + ) (( + ) zero one) one  = ( + ) zero (( + ) one one)
+)
+
+TEST_UNIT "( + )_test5" = let open IntNat in assert_raises 
+	(Some Unrepresentable)
+	(( + ) (nat_of_int max_int)) (nat_of_int 1) 
+
+
+TEST_UNIT "( * )_test1" = let open IntNat in assert_true (
+	int_of_nat ( ( * ) (nat_of_int 70) (nat_of_int 10) ) = 700
+)
+
+TEST_UNIT "( * )_test2" = let open IntNat in assert_true (
+	int_of_nat ( ( * ) (nat_of_int 3) (one) ) = 3 
+)
+
+TEST_UNIT "( * )_test3" = let open IntNat in assert_true (
+	( * ) zero one  = ( * ) one zero
+)
+
+TEST_UNIT "( * )_test4" = let open IntNat in assert_true (
+	( * ) (( * ) zero one) one  = ( * ) zero (( * ) one one)
+)
+
+TEST_UNIT "( + )_test5" = let open IntNat in assert_raises 
+	(Some Unrepresentable)
+	(( * ) (nat_of_int max_int)) (nat_of_int 2) 
+
+TEST_UNIT "( === )_test1" = let open IntNat in assert_true (
+	( === ) (nat_of_int 31) (nat_of_int 31)
+)
+
+TEST_UNIT "( === )_test2" = let open IntNat in assert_false (
+	( === ) (nat_of_int 31) (nat_of_int 2)
+)
+
+TEST_UNIT "( < )_test1" = let open IntNat in assert_true (
+	( < ) (nat_of_int 31) (nat_of_int 32)
+)
+
+TEST_UNIT "( < )_test2" = let open IntNat in assert_false (
+	( < ) (nat_of_int 31) (nat_of_int 31)
+)
+
+
+(* FINISH TESTING INTNAT, BEGIN TESTING LISTNAT *)
+
+
+TEST_UNIT "int_of_nat_test1" = let open ListNat in assert_true (
+	int_of_nat zero = 0
+)
+
+TEST_UNIT "int_of_nat_test2" = let open ListNat in assert_true (
+	int_of_nat one = 1
+)
+
+TEST_UNIT "nat_of_int_test1" = let open ListNat in assert_true (
+	nat_of_int 0 = zero
+)
+
+TEST_UNIT "nat_of_int_test2" = let open ListNat in assert_true (
+	nat_of_int 1 = one
+)
+
+TEST_UNIT "( + )_test1" = let open ListNat in assert_true (
+	int_of_nat ( ( + ) (nat_of_int 34) (nat_of_int 666) ) = 700
+)
+
+TEST_UNIT "( + )_test2" = let open ListNat in assert_true (
+	( + ) zero one  = one
+)
+
+TEST_UNIT "( + )_test3" = let open ListNat in assert_true (
+	( + ) zero one  = ( + ) one zero
+)
+
+TEST_UNIT "( + )_test4" = let open ListNat in assert_true (
+	( + ) (( + ) zero one) one  = ( + ) zero (( + ) one one)
+)
+
+TEST_UNIT "( + )_test5" = let open IntNat in assert_raises 
+	(Some Unrepresentable)
+	(( + ) (nat_of_int max_int)) (nat_of_int 1) 
+
+TEST_UNIT "( * )_test1" = let open ListNat in assert_true (
+	int_of_nat ( ( * ) (nat_of_int 70) (nat_of_int 10) ) = 700
+)
+
+TEST_UNIT "( * )_test2" = let open ListNat in assert_true (
+	int_of_nat ( ( * ) (nat_of_int 3) (one) ) = 3 
+)
+
+TEST_UNIT "( * )_test3" = let open ListNat in assert_true (
+	( * ) zero one  = ( * ) one zero
+)
+
+TEST_UNIT "( * )_test4" = let open ListNat in assert_true (
+	( * ) (( * ) zero one) one  = ( * ) zero (( * ) one one)
+)
+
+TEST_UNIT "( * )_test5" = let open IntNat in assert_raises 
+	(Some Unrepresentable)
+	(( * ) (nat_of_int max_int)) (nat_of_int 2) 
+
+TEST_UNIT "( === )_test1" = let open ListNat in assert_true (
+	( === ) (nat_of_int 31) (nat_of_int 31)
+)
+
+TEST_UNIT "( === )_test2" = let open ListNat in assert_false (
+	( === ) (nat_of_int 31) (nat_of_int 2)
+)
+
+TEST_UNIT "( < )_test1" = let open ListNat in assert_true (
+	( < ) (nat_of_int 31) (nat_of_int 32)
+)
+
+TEST_UNIT "( < )_test2" = let open ListNat in assert_false (
+	( < ) (nat_of_int 31) (nat_of_int 31)
+)
+
+
+(* FINISH TESTING LISTNAT, BEGIN TESTING NATCONVERTFN *)
+
+
+TEST_UNIT "int_of_nat_test1" = let open Test1 in assert_true (
+	int_of_nat zero = 0
+)
+
+TEST_UNIT "int_of_nat_test2" = let open Test1 in assert_true (
+	int_of_nat one = 1
+)
+
+TEST_UNIT "nat_of_int_test1" = let open Test1 in assert_true (
+	nat_of_int 0 = zero
+)
+
+TEST_UNIT "nat_of_int_test2" = let open Test1 in assert_true (
+	nat_of_int 1 = one
+)
+
+TEST_UNIT "( + )_test1" = let open Test1 in assert_true (
+	int_of_nat ( ( + ) (nat_of_int 34) (nat_of_int 666) ) = 700
+)
+
+TEST_UNIT "( + )_test2" = let open Test1 in assert_true (
+	( + ) zero one  = one
+)
+
+TEST_UNIT "( + )_test3" = let open Test1 in assert_true (
+	( + ) zero one  = ( + ) one zero
+)
+
+TEST_UNIT "( + )_test4" = let open Test1 in assert_true (
+	( + ) (( + ) zero one) one  = ( + ) zero (( + ) one one)
+)
+
+(*TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
+	(Some Unrepresentable)
+	(( + ) (nat_of_int max_int)) (nat_of_int 1) *)
+
+
+TEST_UNIT "( * )_test1" = let open Test1 in assert_true (
+	int_of_nat ( ( * ) (nat_of_int 70) (nat_of_int 10) ) = 700
+)
+
+TEST_UNIT "( * )_test2" = let open Test1 in assert_true (
+	int_of_nat ( ( * ) (nat_of_int 3) (one) ) = 3 
+)
+
+TEST_UNIT "( * )_test3" = let open Test1 in assert_true (
+	( * ) zero one  = ( * ) one zero
+)
+
+TEST_UNIT "( * )_test4" = let open Test1 in assert_true (
+	( * ) (( * ) zero one) one  = ( * ) zero (( * ) one one)
+)
+
+(*TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
+	(Some Unrepresentable)
+	(( * ) (nat_of_int max_int)) (nat_of_int 2)*)
+
+TEST_UNIT "( === )_test1" = let open Test1 in assert_true (
+	( === ) (nat_of_int 31) (nat_of_int 31)
+)
+
+TEST_UNIT "( === )_test2" = let open Test1 in assert_false (
+	( === ) (nat_of_int 31) (nat_of_int 2)
+)
+
+TEST_UNIT "( < )_test1" = let open Test1 in assert_true (
+	( < ) (nat_of_int 31) (nat_of_int 32)
+)
+
+TEST_UNIT "( < )_test2" = let open Test1 in assert_false (
+	( < ) (nat_of_int 31) (nat_of_int 31)
+)

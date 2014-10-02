@@ -91,8 +91,8 @@ module IntNat: NATN = struct
       Requires: t1 and t2 are of type t
       Returns: The natural number representation of the product of t1 and t2 *)
     let ( * ) (t1: t) (t2: t) : t = 
-        if ((max t1 t2) > t1*t2) 
-            || (t1*t2 = 0 && t1 <> 0 && t2 <> 0)
+        if (((max t1 t2) > t1*t2) && (t1*t2 <> zero))
+            || (t1*t2 = zero && t1 <> zero && t2 <> zero)
             || ((t1*t2) < 0)
         then raise Unrepresentable else t1 * t2
 
@@ -153,9 +153,27 @@ module ListNat: NATN = struct
       Requires: count is an int, lst is an int list
       Returns: A list with 1 prepended to it "count" times. *)
     let rec multiplier (count: int) (lst: int list) : int list =
-            match count with
-            | 0 -> lst
-            | _ -> multiplier (count-1) (1::lst) 
+        match count with
+        | 0 -> lst
+        | _ -> multiplier (count-1) (1::lst) 
+
+    (*HELPER: Our representation of length that checks for overflow
+              at each iteration of addition. Should the length of the list
+              be above max_int, raise Unrepresentable. This helper will
+              account for all accounts of unrepresentabilities in this 
+              module.
+
+    Requires: lst is a list
+    Returns: The length of a list (so long as it's less than max_int *)
+    let length (lst: 'a list) : int =
+        match lst with
+        | [] -> 0
+        | _ -> List.fold_left (fun a x -> 
+                  if sum_overflows a 1 then
+                      raise Unrepresentable
+                  else
+                      a + 1)
+               0 lst
 
 
     (*Takes t1 and t2 of type t and returns the sum of them. The sum in this
@@ -174,7 +192,7 @@ module ListNat: NATN = struct
       Requires: t1 and t2 are of type t
       Returns: The natural number representation of the product of t1 and t2 *)
     let ( * ) (t1: t) (t2: t) : t = 
-        List.fold_left (fun a x -> multiplier (List.length t1) a) [] t2
+        List.fold_left (fun a x -> multiplier (length t1) a) [] t2
 
 
     (*Takes t1 and t2 of type t and returns whether or not t1 is equal to t2.
@@ -183,7 +201,7 @@ module ListNat: NATN = struct
       Requires: t1 and t2 are of type t
       Returns: bool representing whether t1 equals t2 or not *)
     let ( === ) (t1: t) (t2: t) : bool =
-        List.length t1 = List.length t2
+        length t1 = length t2
 
 
     (*Takes t1 and t2 of type t and returns whether or not t1 is equal to t2.
@@ -193,7 +211,7 @@ module ListNat: NATN = struct
       Requires: t1 and t2 are of type t
       Returns: bool representing whether t1 equals t2 or not *)
     let ( < ) (t1: t) (t2: t) : bool =
-        List.length t1 < List.length t2  
+        length t1 < length t2  
 
 
     (*Takes a t num and then returns the interger equivalent of it.
@@ -202,7 +220,7 @@ module ListNat: NATN = struct
       Requires: num is of type t
       Returns: the integer representation of num *)
     let int_of_nat (num: t) : int =
-        List.length num 
+        length num 
 
 
     (*Takes a t num and then returns the interger equivalent of it.
@@ -341,15 +359,29 @@ module AlienNatFn (M : AlienMapping): NATN = struct
                                     else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 t2)
 
 
+    (*Returns the integer representation of n, which is the sum of all the 
+      integer equivalents of aliensyms in n.
+
+      Requires: n is of type t
+      Returns: An integer representing n *)
     let int_of_nat (n: t) : int =
         List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x)  a) then 
-                                    raise Unrepresentable 
-                                    else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 n
+                                       raise Unrepresentable 
+                                   else 
+                                       (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 n
 
 
+    (*Returns the natural representation of i, which is a list of aliensyms
+      whose integer representations sum up to i.
+
+      Requires: i is of type int
+      Returns: A aliensym list that is the natural representation of i. *)
     let nat_of_int (i: int) : t =
         let rec adder (i: int) (accum: int) (lst: t list) : t list =
-            if accum = i then lst else adder i (Pervasives.(+) accum 1) (one::lst) in
+            if accum = i then 
+                lst 
+              else 
+                adder i (Pervasives.(+) accum 1) (one::lst) in
         List.flatten (adder i 0 [])
  
 end
