@@ -4,7 +4,7 @@ open City_search
 open Parser
 open Assertions
 
-(*Intiating stuff to test with:   *)
+(*Intiating stuff to test with:*)
 module AlienTest : AlienMapping = struct
     type aliensym = string 
 
@@ -17,6 +17,8 @@ module AlienTest : AlienMapping = struct
 end
 
 module Test1 = NatConvertFn(IntNat) 
+module Test2 = AlienNatFn(AlienTest)
+
 
 (* BEGIN TESTING QUADTREE *)
 
@@ -85,6 +87,13 @@ TEST_UNIT "insert_test6" = assert_true (
       	((0.000000002,0.000000002),"testing")])
 )
 
+TEST_UNIT "insert_test7" = assert_raises 
+  (Some OutOfBounds) 
+  (insert n (11.,11.)) 
+  "testing"
+
+
+
 TEST_UNIT "fold_quad_test1" = assert_true (
 	fold_quad (fun a x -> a+1) 0 n = 0
 )
@@ -137,7 +146,8 @@ TEST_UNIT "city_search_test2" = assert_true (
 	city_search (load_city_data "ithaca.csv") ((0.,0.),(1.,1.)) = []
 )
 
-(* FINISH TESTING QUADTREE, BEGIN TESTING INTNAT *)
+
+(* FINISH TESTING CITY_SEARCH, BEGIN TESTING INTNAT *)
 
 
 TEST_UNIT "int_of_nat_test1" = let open IntNat in assert_true (
@@ -365,3 +375,86 @@ TEST_UNIT "( < )_test1" = let open Test1 in assert_true (
 TEST_UNIT "( < )_test2" = let open Test1 in assert_false (
 	( < ) (nat_of_int 31) (nat_of_int 31)
 )
+
+
+(*-----------------TESTING ALIEN FUNCTOR----------------------*)
+
+(*TESTING INT_OF_NAT AND NAT_OF INT*)
+TEST_UNIT "AlienNatFn_test1" = let open Test2 in assert_true (
+  (int_of_nat(nat_of_int 4)) = 4
+)
+
+TEST_UNIT "AlienNatFn_test2" = let open Test2 in assert_true (
+  (int_of_nat(nat_of_int 5)) = 5
+)
+
+TEST_UNIT "AlienNatFn_test3" = let open Test2 in assert_true (
+  (nat_of_int 1) = one
+)
+
+TEST_UNIT "AlienNatFn_test4" = let open Test2 in assert_true (
+  (nat_of_int 0) = zero
+) 
+
+
+(*TESTING ADDITION*)
+TEST_UNIT "AlienNatFn_test5" = let open Test2 in assert_true (
+  int_of_nat((nat_of_int 5) + (nat_of_int 6)) = 11
+)
+
+TEST_UNIT "AlienNatFn_test6" = let open Test2 in assert_true (
+  (nat_of_int 6) + (nat_of_int 5) = (nat_of_int 5) + (nat_of_int 6)
+)
+
+TEST_UNIT "AlienNatFn_test7" = let open Test2 in assert_true (
+  int_of_nat((nat_of_int 5) + (nat_of_int 0)) = 5
+)
+
+TEST_UNIT "AlienNatFn_test8" = let open Test2 in assert_true (
+  ((nat_of_int 5) + (nat_of_int 6)) + (nat_of_int 7) =
+  (nat_of_int 5) + ((nat_of_int 6) + (nat_of_int 7))
+)
+
+
+(*TESTING MUTLIPLICATION*)
+TEST_UNIT "AlienNatFn_test9" = let open Test2 in assert_true (
+  int_of_nat((nat_of_int 10) * (nat_of_int 15)) = 150
+)
+
+TEST_UNIT "AlienNatFn_test10" = let open Test2 in assert_true (
+  (nat_of_int 10) * zero = zero
+)
+
+TEST_UNIT "AlienNatFn_test11" = let open Test2 in assert_true (
+  int_of_nat((nat_of_int 10) * one) = 10
+)
+
+TEST_UNIT "AlienNatFn_test12" = let open Test2 in assert_true (
+  ((nat_of_int 2) * (nat_of_int 3)) * (nat_of_int 4) = 
+  (nat_of_int 2) * ((nat_of_int 3) * (nat_of_int 4))
+)
+
+TEST_UNIT "AlienNatFn_test13" = let open Test2 in assert_true (
+  (nat_of_int 10) * (nat_of_int 15) = (nat_of_int 15) * (nat_of_int 10)
+)
+
+
+(*TESTING EQUALITY*)
+TEST_UNIT "AlienNatFn_test14" = let open Test2 in assert_true (
+  (nat_of_int 10) === (nat_of_int 10)
+)
+
+TEST_UNIT "AlienNatFn_test15" = let open Test2 in assert_true (
+  not ((nat_of_int 10) === (nat_of_int 9))
+)
+
+
+(*TESTING LESS THAN*)
+TEST_UNIT "AliennatFn_test16" = let open Test2 in assert_true (
+  (nat_of_int 5) < (nat_of_int 6)
+)
+
+TEST_UNIT "AlienNatFn_test17" = let open Test2 in assert_true (
+  not ((nat_of_int 5) < (nat_of_int 4))
+)
+
