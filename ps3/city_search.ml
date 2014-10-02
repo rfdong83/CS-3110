@@ -1,6 +1,7 @@
 open Parser
 open Quadtree
 
+
 (*Takes a CSV file represented by string s and loads all the cities within
   the file. It then creates a quadtree where all the cities are objects within
   the region of the quadtree. 
@@ -16,6 +17,8 @@ let load_city_data (s:string) : string quadtree =
     List.fold_left (match_city) 
         (new_tree ((-90.,-180.),(90.,180.))) 
         (parse s) 
+
+
 (*Returns all of the cities in string quadtree q within a given region r.
   
   Requires: r is a region, q is a string quadtree of cities

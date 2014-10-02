@@ -84,6 +84,7 @@ module IntNat: NATN = struct
     let ( + ) (t1: t) (t2: t) : t =
         if sum_overflows t1 t2 then raise Unrepresentable else t1 + t2
 
+
     (*Takes t1 and t2 of type t and returns the product of them. If the product
       of t1 and t2 are beyond max_int then raise Unrepresentable error.
 
@@ -94,6 +95,7 @@ module IntNat: NATN = struct
             || (t1*t2 = 0 && t1 <> 0 && t2 <> 0)
             || ((t1*t2) < 0)
         then raise Unrepresentable else t1 * t2
+
 
     (*Takes t1 and t2 of type t and returns whether or not t1 is equal to t2.
       In this case, equality is defined as it being the same number.
@@ -112,6 +114,7 @@ module IntNat: NATN = struct
     let ( < ) (t1: t) (t2: t) : bool =
         t1 < t2  
 
+
     (*Takes a t num and then returns the interger equivalent of it.
       In this case, it would be the number itself, just as an int.
       Should the natural number be above max_int, raise Unrepresentable.
@@ -120,6 +123,7 @@ module IntNat: NATN = struct
       Returns: the integer representation of num *)
     let int_of_nat (num: t) : int =
         if sum_overflows zero num then raise Unrepresentable else num
+
 
     (*Takes a t int and then returns the natural number equivalent of it.
       In this case, it would be the number itself, just as a t.
@@ -199,6 +203,7 @@ module ListNat: NATN = struct
       Returns: the integer representation of num *)
     let int_of_nat (num: t) : int =
         List.length num 
+
 
     (*Takes a t num and then returns the interger equivalent of it.
       In this case, it would be the number itself, just as an int.
@@ -335,10 +340,12 @@ module AlienNatFn (M : AlienMapping): NATN = struct
                                     raise Unrepresentable 
                                     else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 t2)
 
+
     let int_of_nat (n: t) : int =
         List.fold_left (fun a x -> if (sum_overflows (M.int_of_aliensym x)  a) then 
                                     raise Unrepresentable 
                                     else (Pervasives.(+) (M.int_of_aliensym x)  a)) 0 n
+
 
     let nat_of_int (i: int) : t =
         let rec adder (i: int) (accum: int) (lst: t list) : t list =

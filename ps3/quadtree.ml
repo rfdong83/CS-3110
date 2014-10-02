@@ -36,6 +36,7 @@ let new_tree (r:region) : 'a quadtree =
   If an object happens to be on an "axis" after a Leaf is split, it will be 
   considered within the quadrant above the x-axis or to the right of the y-axis,
   whichever applies.
+
   Boundary cases: A coordinate is not considered to be a part of a region if it
   lies on it's boundary (coordinate (5.,5.) is not in the region from (0.,0.) to 
   (5.,5.) UNLESS it is on it's lower left corner, so (0.,0.) is in the 
@@ -82,7 +83,6 @@ let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
                     )
                 coord
                 obj
-
         | Leaf (((x1,y1),(x2,y2)), []) -> 
             (Node (((x1,y1),(x2,y2)),
                     new_tree ((x_midpoint(l), y_midpoint(l)), (x2,y2)) ,
