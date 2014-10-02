@@ -147,18 +147,61 @@ module ListNat: NATN = struct
 end
 
 module NatConvertFn (N: NATN) : NATN = struct 
-    let int_of_nat (n: N.t): int = 
+    type t = N.t
+
+    exception Unrepresentable
+
+    let zero = N.zero
+    let one = N.one
+
+    let ( +- ) (t1: t) (t2: t) : t =
+        N.( +- ) t1 t2
+
+    let ( *- ) (t1: t) (t2: t) : t =
+        N.( *- ) t1 t2
+
+    let ( === ) (t1: t) (t2: t) : bool =
+        N.( === ) t1 t2
+
+    let ( < ) (t1: t) (t2: t) : bool =
+        N.( < ) t1 t2 
+
+    let int_of_nat (n: t): int = 
         N.int_of_nat n
 
-    let nat_of_int (n: int): N.t =
+    let nat_of_int (n: int): t =
         N.nat_of_int n
 
 end
 
 module AlienNatFn (M : AlienMapping): NATN = struct
-    type t = M . aliensym list
+    type t = M.aliensym list
     
-    let translate (words: t) : NATN.t = 
-        NATN.nat_of_int(List.fold_left (fun a x -> (M.int_of_aliensym x)+a) 0 words)
+    exception Unrepresentable
 
+    let zero = [M.zero]
+    let one = [M.one]
+
+    let ( +- ) (t1: t) (t2: t) : t =
+        List.fold_left (fun a x -> x::a) t2 t1
+
+    let ( *- ) (t1: t) (t2: t) : t =
+        List.fold_left (fun a x -> x::a) t2 t1
+
+    let ( === ) (t1: t) (t2: t) : bool =
+        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t1) =
+        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t2)
+
+    let ( < ) (t1: t) (t2: t) : bool =
+        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t1) <
+        (List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 t2)
+
+    let int_of_nat (n: t) : int =
+        List.fold_left (fun a x -> (M.int_of_aliensym x) + a) 0 n
+
+    let nat_of_int (i: int) : t =
+        let rec adder (i: int) (accum: int) (lst: t list) : t list =
+            if accum = i then lst else adder i (accum + 1) (one::lst) in
+        List.flatten (adder i 0 [])
+ 
 end
