@@ -18,12 +18,6 @@ let min_diagonal = 0.0000001
 		     
 exception OutOfBounds
 
-let q1 = Leaf (((0., 0.), (10., 10.)), [((4.,4.),"hi")])
-let q2 = Leaf (((-10., 0.), (0., 10.)), [])
-let q3 = Leaf (((-10., -10.), (0., 0.)), [])
-let q4 = Leaf (((0., -10.), (10., 0.)), [])
-let n = Node (((-10., -10.) , (10.,10.)), q1,q2,q3,q4)
-
 let new_tree (r:region) : 'a quadtree = 
     Leaf(r, [])
         
@@ -46,7 +40,7 @@ let rec insert (q: 'a quadtree) (c : coord) (s:'a) : 'a quadtree =
     let contains (r': region) (c: coord) : bool = 
         match r' with
         | ((x1, y1), (x2, y2)) -> 
-            fst(c) > x1 && fst(c) < x2 && snd(c) > y1 && snd(c) < y2 in
+            fst(c) >= x1 && fst(c) < x2 && snd(c) >= y1 && snd(c) < y2 in
 
 
     let splitter (l: 'a quadtree) : 'a quadtree =
