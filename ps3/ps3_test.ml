@@ -335,9 +335,9 @@ TEST_UNIT "( + )_test4" = let open Test1 in assert_true (
 	( + ) (( + ) zero one) one  = ( + ) zero (( + ) one one)
 )
 
-(*TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
-	(Some Unrepresentable)
-	(( + ) (nat_of_int max_int)) (nat_of_int 1) *)
+TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
+	(Some IntNat.Unrepresentable)
+	(( + ) (nat_of_int max_int)) (nat_of_int 1) 
 
 
 TEST_UNIT "( * )_test1" = let open Test1 in assert_true (
@@ -356,9 +356,9 @@ TEST_UNIT "( * )_test4" = let open Test1 in assert_true (
 	( * ) (( * ) zero one) one  = ( * ) zero (( * ) one one)
 )
 
-(*TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
-	(Some Unrepresentable)
-	(( * ) (nat_of_int max_int)) (nat_of_int 2)*)
+TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
+	(Some IntNat.Unrepresentable)
+	(( * ) (nat_of_int max_int)) (nat_of_int 2)
 
 TEST_UNIT "( === )_test1" = let open Test1 in assert_true (
 	( === ) (nat_of_int 31) (nat_of_int 31)
