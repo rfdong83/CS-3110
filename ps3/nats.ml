@@ -234,55 +234,12 @@ module ListNat: NATN = struct
 
 end
 
-module NatConvertFn (N: NATN) : NATN = struct 
-    type t = N.t
-
-    exception Unrepresentable
-
-    let zero = N.zero
-    let one = N.one
-
-    (*Returns the sum of t1 and t2, with the idea of sum depending
-      on the module N.
-
-      Requires: t1 and t2 are of type t
-      Returns: the sum of t1 and t2 based on N's rules. *)
-    let ( + ) (t1: t) (t2: t) : t =
-        N.( + ) t1 t2
-
-
-    (*Returns the product of t1 and t2, with the idea of product depending
-    on the module N.
-
-    Requires: t1 and t2 are of type t
-    Returns: the product of t1 and t2 based on N's rules. *)
-    let ( * ) (t1: t) (t2: t) : t =
-        N.( * ) t1 t2
-
-
-    (*Returns whether t1 and t2 are equal, with the idea
-      of equality depending on the module N.
-
-      Requires: t1 and t2 are of type t
-      Returns: bool representing whether t1 and t2 are equal. *)
-    let ( === ) (t1: t) (t2: t) : bool =
-        N.( === ) t1 t2
-
-
-    (*Returns whether t1 is less than t2, with the notion of less than
-      depending on the module N.
-
-    Requires: t1 and t2 are of type t
-    Returns: bool representing whether t1 is less than t2. *)
-    let ( < ) (t1: t) (t2: t) : bool =
-        N.( < ) t1 t2 
-
-
+module NatConvertFn (N: NATN) = struct 
     (*Returns the integer representation of n.
 
       Requires: n is of type t
       Returns: The integer representation of n based on N's rules. *)
-    let int_of_nat (n: t): int = 
+    let int_of_nat (n: N.t): int = 
         N.int_of_nat n
 
 
@@ -290,7 +247,7 @@ module NatConvertFn (N: NATN) : NATN = struct
 
       Requires: n is an integer
       Returns: The natrual number representation of n based on N's rules. *)
-    let nat_of_int (n: int): t =
+    let nat_of_int (n: int): N.t =
         N.nat_of_int n
 
 end

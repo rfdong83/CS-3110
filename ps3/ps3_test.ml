@@ -304,76 +304,19 @@ TEST_UNIT "( < )_test2" = let open ListNat in assert_false (
 
 
 TEST_UNIT "int_of_nat_test1" = let open Test1 in assert_true (
-	int_of_nat zero = 0
+	int_of_nat IntNat.zero = 0
 )
 
 TEST_UNIT "int_of_nat_test2" = let open Test1 in assert_true (
-	int_of_nat one = 1
+	int_of_nat IntNat.one = 1
 )
 
 TEST_UNIT "nat_of_int_test1" = let open Test1 in assert_true (
-	nat_of_int 0 = zero
+	nat_of_int 0 = IntNat.zero
 )
 
 TEST_UNIT "nat_of_int_test2" = let open Test1 in assert_true (
-	nat_of_int 1 = one
-)
-
-TEST_UNIT "( + )_test1" = let open Test1 in assert_true (
-	int_of_nat ( ( + ) (nat_of_int 34) (nat_of_int 666) ) = 700
-)
-
-TEST_UNIT "( + )_test2" = let open Test1 in assert_true (
-	( + ) zero one  = one
-)
-
-TEST_UNIT "( + )_test3" = let open Test1 in assert_true (
-	( + ) zero one  = ( + ) one zero
-)
-
-TEST_UNIT "( + )_test4" = let open Test1 in assert_true (
-	( + ) (( + ) zero one) one  = ( + ) zero (( + ) one one)
-)
-
-TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
-	(Some IntNat.Unrepresentable)
-	(( + ) (nat_of_int max_int)) (nat_of_int 1) 
-
-
-TEST_UNIT "( * )_test1" = let open Test1 in assert_true (
-	int_of_nat ( ( * ) (nat_of_int 70) (nat_of_int 10) ) = 700
-)
-
-TEST_UNIT "( * )_test2" = let open Test1 in assert_true (
-	int_of_nat ( ( * ) (nat_of_int 3) (one) ) = 3 
-)
-
-TEST_UNIT "( * )_test3" = let open Test1 in assert_true (
-	( * ) zero one  = ( * ) one zero
-)
-
-TEST_UNIT "( * )_test4" = let open Test1 in assert_true (
-	( * ) (( * ) zero one) one  = ( * ) zero (( * ) one one)
-)
-
-TEST_UNIT "( + )_test5" = let open Test1 in assert_raises 
-	(Some IntNat.Unrepresentable)
-	(( * ) (nat_of_int max_int)) (nat_of_int 2)
-
-TEST_UNIT "( === )_test1" = let open Test1 in assert_true (
-	( === ) (nat_of_int 31) (nat_of_int 31)
-)
-
-TEST_UNIT "( === )_test2" = let open Test1 in assert_false (
-	( === ) (nat_of_int 31) (nat_of_int 2)
-)
-
-TEST_UNIT "( < )_test1" = let open Test1 in assert_true (
-	( < ) (nat_of_int 31) (nat_of_int 32)
-)
-
-TEST_UNIT "( < )_test2" = let open Test1 in assert_false (
-	( < ) (nat_of_int 31) (nat_of_int 31)
+	nat_of_int 1 = IntNat.one
 )
 
 
