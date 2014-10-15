@@ -1,0 +1,35 @@
+(*
+Takes n and adds k*i, where i represents the number of times the 
+function has been called in the past.
+Requires: n,k are ints
+*)
+let count_up_from n k =
+  let i = ref (-1) in 
+  fun () -> (i := !i + 1); n + k * !i
+
+(*
+Generates an array of length n, where f is called on the index at every
+position.
+Requires: f to be (int -> 'a) and n to be an int
+Ex: tabulate (fun x -> x*x) 4 = {[0,1,4,9]}
+*)
+let tabulate f n = 
+  Array.init n f 
+
+(*
+Recreates fold_left on arrays without using the rec keyword or the use of
+for/while loops
+Requires: f is type ('a -> 'b -> 'a), acc is type 'b, and xs is
+type 'a array
+*)
+let fold_left_imp f acc xs = 
+  List.fold_left f acc (Array.to_list xs)
+
+
+type t = string  (* TODO: change unit to whatever you want *)
+type u = int (* TODO: change unit to whatever you want *)
+let lst : t list = ["1";"20";"300"]
+let count = ref 1
+let zardoz (x: t) : u =  
+  (count := !count + 1);
+  (String.length x) + !count
