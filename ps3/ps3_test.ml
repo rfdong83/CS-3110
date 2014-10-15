@@ -13,8 +13,8 @@ module AlienTest : AlienMapping = struct
 
     let int_of_aliensym (sym: aliensym) : int =
         String.length(sym)
-
 end
+
 
 module Test1 = NatConvertFn(IntNat) 
 module Test2 = AlienNatFn(AlienTest)
@@ -87,11 +87,11 @@ TEST_UNIT "insert_test6" = assert_true (
       	((0.000000002,0.000000002),"testing")])
 )
 
+
 TEST_UNIT "insert_test7" = assert_raises 
   (Some OutOfBounds) 
   (insert n (11.,11.)) 
   "testing"
-
 
 
 TEST_UNIT "fold_quad_test1" = assert_true (
@@ -400,4 +400,3 @@ TEST_UNIT "AliennatFn_test16" = let open Test2 in assert_true (
 TEST_UNIT "AlienNatFn_test17" = let open Test2 in assert_true (
   not ((nat_of_int 5) < (nat_of_int 4))
 )
-
