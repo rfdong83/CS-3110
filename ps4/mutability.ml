@@ -7,6 +7,7 @@ let count_up_from n k =
   let i = ref (-1) in 
   fun () -> (i := !i + 1); n + k * !i
 
+
 (*
 Generates an array of length n, where f is called on the index at every
 position.
@@ -15,6 +16,7 @@ Ex: tabulate (fun x -> x*x) 4 = {[0,1,4,9]}
 *)
 let tabulate f n = 
   Array.init n f 
+  
 
 (*
 Recreates fold_left on arrays without using the rec keyword or the use of
@@ -23,7 +25,14 @@ Requires: f is type ('a -> 'b -> 'a), acc is type 'a, and xs is
 type 'b array
 *)
 let fold_left_imp f acc xs = 
-  
+  let a = ref acc in 
+  let x = ref xs in 
+  while !x <> [] do 
+    match !x with
+    | h::t -> x := t; a := f !a h
+    | _ -> a := !a
+  done;
+  !a
 
 
 type t = string  (* TODO: change unit to whatever you want *)
