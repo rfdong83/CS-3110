@@ -23,8 +23,14 @@ Requires: f is type ('a -> 'b -> 'a), acc is type 'b, and xs is
 type 'a array
 *)
 let fold_left_imp f acc xs = 
-  List.fold_left f acc (Array.to_list xs)
-
+  let a = ref acc in 
+  let x = ref xs in 
+  while !x <> [] do 
+    match !x with
+    | h::t -> x := t; a := f !a h
+    | _ -> a := !a
+  done;
+  !a
 
 type t = string  (* TODO: change unit to whatever you want *)
 type u = int (* TODO: change unit to whatever you want *)

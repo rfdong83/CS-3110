@@ -38,11 +38,27 @@ module type INORDER_TREE_ITERATOR = sig
   val create: 'a tree -> 'a t
 end
 
-(* TODO:
+
 module InorderTreeIterator : INORDER_TREE_ITERATOR = struct
-  ...
+  type 'a t = 'a list ref
+
+  let rec create (tree: 'a tree): 'a t = 
+    match tree with
+    | Leaf -> ref []
+    | Node (x,l,r) -> ref ((!(create l))@[x]@(!(create r)))
+
+  let has_next (iter: 'a t): bool = 
+    if !iter = [] then
+      false
+    else 
+      true
+
+  let next (iter: 'a t): 'a = 
+    iter := List.tl (!iter)
+    List.hd(!iter);
+
 end
-*)
+
 
 module type TAKE_ITERATOR = functor (I: ITERATOR) -> sig
   include ITERATOR
