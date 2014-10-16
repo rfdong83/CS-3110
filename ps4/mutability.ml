@@ -19,11 +19,11 @@ let tabulate f n =
 (*
 Recreates fold_left on arrays without using the rec keyword or the use of
 for/while loops
-Requires: f is type ('a -> 'b -> 'a), acc is type 'b, and xs is
-type 'a array
+Requires: f is type ('a -> 'b -> 'a), acc is type 'a, and xs is
+type 'b array
 *)
 let fold_left_imp f acc xs = 
-  List.fold_left f acc (Array.to_list xs)
+  
 
 
 type t = string  (* TODO: change unit to whatever you want *)
