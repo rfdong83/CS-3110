@@ -23,7 +23,23 @@ module type LIST_ITERATOR = sig
 end
 
 module ListIterator : LIST_ITERATOR = struct
-  let 
+  type 'a t =  'a list ref
+
+  let has_next (l: 'a t): bool =
+    if !l = [] then
+      false
+    else 
+      true
+
+
+  let next (l: 'a t): 'a =
+    let x = List.hd !l;
+    l := List.tl (!l);
+    x
+
+
+  let create (l: 'a list): 'a t =
+    ref l 
 end
 
 
