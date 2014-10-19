@@ -70,8 +70,9 @@ module InorderTreeIterator : INORDER_TREE_ITERATOR = struct
       true
 
   let next (iter: 'a t): 'a = 
-    iter := List.tl (!iter)
-    List.hd(!iter);
+    let head = List.hd(!iter) in 
+    iter := List.tl (!iter);
+    head
 
 end
 
@@ -86,7 +87,7 @@ module type TAKE_ITERATOR = functor (I: ITERATOR) -> sig
   val create: int -> 'a I.t -> 'a t
 end
 
-(* TODO:
+(* TODO: 
 module TakeIterator : TAKE_ITERATOR = functor (I : ITERATOR) -> struct
   ...
 end
@@ -95,17 +96,25 @@ end
 module IteratorUtilsFn (I : ITERATOR) = struct
   open I
 
+
   (* effects: causes i to yield n results, ignoring
    *   those results.  Raises NoResult if i does.  *)
   let advance (n: int) (iter: 'a I.t) : unit =
-    failwith "Not implemented"
+    let x = ref n in
+    while x <> 0 do
+      x := !x - 1; 
+      next iter
+    done 
 
   (* returns: the final value of the accumulator after
    *   folding f over all the results returned by i,
    *   starting with acc as the initial accumulator.
    * effects: causes i to yield all its results. *)
   let rec fold (f : ('a -> 'b -> 'a)) (acc : 'a) (iter: 'b I.t) : 'a =
-    failwith "Not implemented"
+      try
+        fold f (fold f acc iter) (next iter)
+      with 
+      | NoResult -> acc
 end
 
 module type RANGE_ITERATOR = functor (I : ITERATOR) -> sig
