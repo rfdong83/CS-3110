@@ -33,9 +33,11 @@ module ListIterator : LIST_ITERATOR = struct
 
 
   let next (l: 'a t): 'a =
-    let x = List.hd !l;
-    l := List.tl (!l);
-    x
+    match !l with 
+    | [] -> raise NoResult
+    | h::t -> 
+      l := ref t;
+      h
 
 
   let create (l: 'a list): 'a t =
@@ -70,9 +72,11 @@ module InorderTreeIterator : INORDER_TREE_ITERATOR = struct
       true
 
   let next (iter: 'a t): 'a = 
-    let head = List.hd(!iter) in 
-    iter := List.tl (!iter);
-    head
+    match !iter with
+    | [] -> raise NoResult
+    | h::t -> 
+      iter := ref t
+      h
 
 end
 
@@ -87,11 +91,20 @@ module type TAKE_ITERATOR = functor (I: ITERATOR) -> sig
   val create: int -> 'a I.t -> 'a t
 end
 
-(* TODO: 
+
 module TakeIterator : TAKE_ITERATOR = functor (I : ITERATOR) -> struct
-  ...
+  type 'a t = ('a I.t)
+
+  let has_next (iter: 'a t): bool = 
+    I.has_next iter
+
+  let next (iter: 'a t): 'a = 
+    I.next iter
+
+  let create (n: int) (iter: 'a I.t): 'a t = 
+    
 end
-*)
+
 
 module IteratorUtilsFn (I : ITERATOR) = struct
   open I
