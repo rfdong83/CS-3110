@@ -35,10 +35,16 @@ let fold_left_imp f acc xs =
   !a
 
 
-type t = string  (* TODO: change unit to whatever you want *)
-type u = int (* TODO: change unit to whatever you want *)
+type t = string  
+type u = int
 let lst : t list = ["1";"20";"300"]
 let count = ref 1
+(*
+A function that proves that reversing a list and applying map does not always
+equal applying map and then reversing it, when allowed to use imperative 
+features of Ocaml.
+Requires: x to be type t
+*)
 let zardoz (x: t) : u =  
   (count := !count + 1);
   (String.length x) + !count
