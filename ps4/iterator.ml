@@ -23,7 +23,9 @@ module type LIST_ITERATOR = sig
 end
 
 module ListIterator : LIST_ITERATOR = struct
+
   type 'a t =  'a list ref
+  exception NoResult
 
   let has_next (l: 'a t): bool =
     if !l = [] then
@@ -36,7 +38,7 @@ module ListIterator : LIST_ITERATOR = struct
     match !l with 
     | [] -> raise NoResult
     | h::t -> 
-      l := ref t;
+      l := t;
       h
 
 
@@ -58,7 +60,9 @@ end
 
 
 module InorderTreeIterator : INORDER_TREE_ITERATOR = struct
+
   type 'a t = 'a list ref
+  exception NoResult
 
   let rec create (tree: 'a tree): 'a t = 
     match tree with
@@ -75,7 +79,7 @@ module InorderTreeIterator : INORDER_TREE_ITERATOR = struct
     match !iter with
     | [] -> raise NoResult
     | h::t -> 
-      iter := ref t
+      iter := t;
       h
 
 end
@@ -93,16 +97,25 @@ end
 
 
 module TakeIterator : TAKE_ITERATOR = functor (I : ITERATOR) -> struct
+
   type 'a t = ('a I.t)
+  exception NoResult
+
+  let count = ref 0
 
   let has_next (iter: 'a t): bool = 
     I.has_next iter
 
   let next (iter: 'a t): 'a = 
-    I.next iter
+    count := !count - 1;
+    if !count < 0 then 
+      raise NoResult
+    else 
+      I.next iter
 
-  let create (n: int) (iter: 'a I.t): 'a t = 
-    
+  let create (n: int) (i: 'a I.t): 'a t = 
+    count := n;
+    i
 end
 
 
@@ -112,22 +125,24 @@ module IteratorUtilsFn (I : ITERATOR) = struct
 
   (* effects: causes i to yield n results, ignoring
    *   those results.  Raises NoResult if i does.  *)
-  let advance (n: int) (iter: 'a I.t) : unit =
+  let advance (n: int) (i: 'a t) : unit =
     let x = ref n in
-    while x <> 0 do
-      x := !x - 1; 
-      next iter
+    while !x <> 0 do
+      let trash = ref (next i) in
+      x := !x - 1
     done 
 
   (* returns: the final value of the accumulator after
    *   folding f over all the results returned by i,
    *   starting with acc as the initial accumulator.
    * effects: causes i to yield all its results. *)
-  let rec fold (f : ('a -> 'b -> 'a)) (acc : 'a) (iter: 'b I.t) : 'a =
-      try
-        fold f (fold f acc iter) (next iter)
-      with 
-      | NoResult -> acc
+  let fold (f : ('a -> 'b -> 'a)) (acc : 'a) (i: 'b I.t) : 'a =
+    let a = ref acc in 
+    while (has_next i) do
+      a := (f !a (next i))
+    done;
+    !a
+
 end
 
 module type RANGE_ITERATOR = functor (I : ITERATOR) -> sig
@@ -143,8 +158,35 @@ module type RANGE_ITERATOR = functor (I : ITERATOR) -> sig
   val create : int -> int -> 'a I.t -> 'a t
 end
 
-(* TODO:
+
 module RangeIterator : RANGE_ITERATOR = functor (I : ITERATOR) -> struct
-  ...
+
+  type 'a t = 'a I.t
+  exception NoResult
+
+  let switch = ref true
+
+  let has_next (i: 'a t): bool = 
+    I.has_next i
+
+  let next (i: 'a t): 'a = 
+    if !switch then 
+      I.next i
+    else 
+      raise NoResult
+
+  let create (n: int) (m: int) (i: 'a I.t): 'a t = 
+    let advance (n: int) (iter: 'a I.t) : unit =
+      let x = ref n in
+      while !x <> 0 do
+        let trash = ref (next iter) in
+        x := !x - 1
+      done in 
+    let count = ref n in
+    advance n i; 
+    count := !count + 1;
+    if (!count <= m) && (n <= m) then
+      i
+    else
+      raise NoResult
 end
-*)
