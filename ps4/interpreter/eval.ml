@@ -17,17 +17,23 @@ and environment = value ref Environment.environment
 let rec read_expression (input : datum) : expression =
   match input with
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
-     failwith "Oh my God!  You are The Rower!"
+      ExprVariable (Identifier.variable_of_identifier id)
   | Atom (Identifier id) ->
      (* Above match case didn't succeed, so id is not a valid variable. *)
      failwith "I'm such a huge fan!"
+  | Atom (Integer x) ->
+      ExprSelfEvaluating (SEInteger x)
+  | Atom (Boolean tf) ->
+      ExprSelfEvaluating (SEBoolean tf)
+  | Cons (d1, d2) ->
+      ExprProcCall ( (read_expression d1), [read_expression d2])
   | _ ->
      failwith "Everything you do is just amazing!"
 
 (* Parses a datum into a toplevel input. *)
 let read_toplevel (input : datum) : toplevel =
   match input with
-  | _ -> failwith "Sing the Rowing Song!"
+  | _ -> ToplevelExpression (read_expression input)
 
 (* This function returns an initial environment with any built-in
    bound variables. *)
@@ -43,7 +49,7 @@ and eval (expression : expression) (env : environment) : value =
   match expression with
   | ExprSelfEvaluating _
   | ExprVariable _        ->
-     failwith "'Oh I sure love to row my boat with my...oar."
+     ValDatum 
   | ExprQuote _           ->
      failwith "Rowing!"
   | ExprLambda (_, _)
