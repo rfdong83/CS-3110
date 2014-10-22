@@ -13,26 +13,39 @@ and value =
 and binding = value ref Environment.binding
 and environment = value ref Environment.environment
 
+let iconcat i1 i2 =
+  let s1 = Identifier.string_of_identifier i1 in
+  let s2 = Identifier.string_of_identifier i2 in
+  Identifier.identifier_of_string(s1^s2)
+
 (* Parses a datum into an expression. *)
 let rec read_expression (input : datum) : expression =
   match input with
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
-     failwith "Oh my God!  You are The Rower!"
+      ExprVariable (Identifier.variable_of_identifier id)
   | Atom (Identifier id) ->
      (* Above match case didn't succeed, so id is not a valid variable. *)
-     failwith "I'm such a huge fan!"
-  | _ ->
-     failwith "Everything you do is just amazing!"
+      ExprQuote input
+  | Atom (Boolean tf) -> 
+      ExprSelfEvaluating (SEBoolean tf)
+  | Atom (Integer n) -> 
+      ExprSelfEvaluating (SEInteger n)
+  | Cons (d1,d2) -> read_expression d1  
+  | Nil -> ExprQuote Nil
+  | _ -> failwith "Everything else"
 
 (* Parses a datum into a toplevel input. *)
 let read_toplevel (input : datum) : toplevel =
   match input with
-  | _ -> failwith "Sing the Rowing Song!"
+  | _ -> ToplevelExpression (read_expression input)
 
 (* This function returns an initial environment with any built-in
    bound variables. *)
 let rec initial_environment () : environment =
-  failwith "You know!"
+  let id = Identifier.identifier_of_string "course" in 
+  let var = Identifier.variable_of_identifier id in
+  let v = ref (ValDatum (Atom(Integer 3110))) in
+  Environment.add_binding Environment.empty_environment (var, v)
 
 (* Evaluates an expression down to a value in a given environment. *)
 (* You may want to add helper functions to make this function more
@@ -41,11 +54,18 @@ let rec initial_environment () : environment =
    statement. *)
 and eval (expression : expression) (env : environment) : value =
   match expression with
-  | ExprSelfEvaluating _
-  | ExprVariable _        ->
-     failwith "'Oh I sure love to row my boat with my...oar."
-  | ExprQuote _           ->
-     failwith "Rowing!"
+  | ExprSelfEvaluating (SEInteger x) ->
+      ValDatum (Atom (Integer x))
+  | ExprSelfEvaluating (SEBoolean tf) ->
+      ValDatum (Atom (Boolean tf))
+  | ExprVariable var ->
+      if (Environment.is_bound env var) then
+          let thing = (Environment.get_binding env var) in
+          !thing
+      else
+          failwith "Variable"
+  | ExprQuote q ->
+      ValDatum q 
   | ExprLambda (_, _)
   | ExprProcCall _        ->
      failwith "Sing along with me as I row my boat!'"
