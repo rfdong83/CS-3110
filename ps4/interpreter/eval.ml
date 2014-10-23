@@ -40,7 +40,6 @@ let rec read_expression (input : datum) : expression =
   | Atom (Boolean tf) 
   | Cons (Atom (Boolean tf), Nil)-> 
       ExprSelfEvaluating (SEBoolean tf)
-
   (* Dealing with Integers *)
   | Atom (Integer n)
   | Cons (Atom (Integer n), Nil) -> 
@@ -154,12 +153,17 @@ let rec initial_environment () : environment =
    statement. *)
 and eval (expression : expression) (env : environment) : value =
   (* Helper Function: returns true if l contains all unique elements,
-   * false otherwise*)
+   * false otherwise *)
   let rec unique l = 
     match l with
     | [] -> true 
     | [x] -> true
     | h::t -> (not (List.mem h t)) && (unique t) in 
+  (* Helper Function: takes an expression list and runs eval on each element
+   * returning a value list *)
+  let elist_to_vlist lst =
+    List.rev (List.fold_left (fun a x -> (eval x env)::a)
+        [] lst) in
 
   match expression with
   | ExprSelfEvaluating (SEInteger x) ->
@@ -187,11 +191,20 @@ and eval (expression : expression) (env : environment) : value =
         failwith "Variables were not unique"
 
   | ExprProcCall (e1, lst) ->
-      let vlst = List.rev (List.fold_left (fun a x -> (eval x env)::a)
-          [] lst) in
       (match (eval e1 env) with
-      | ValProcedure (ProcBuiltin f) -> f vlst env
-      | _ -> failwith "not a function")
+      | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist lst) env
+      | ValProcedure (ProcLambda (varlist, env, h::t)) -> 
+          if List.length varlist = List.length lst then
+              let env' = List.fold_right2 
+                (fun x1 x2 a -> Environment.add_binding a (x1,ref x2))
+                varlist (elist_to_vlist lst) env in 
+              eval (ExprProcCall (h, t)) env'
+          else
+              failwith "Insufficent arugments"
+      | ValDatum data ->
+          eval (read_expression data) env
+      | _ -> failwith "not happening"
+      )
 
   | ExprIf (e1, e2, e3) ->
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
