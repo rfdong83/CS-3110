@@ -15,41 +15,76 @@ and environment = value ref Environment.environment
 
 (* Parses a datum into an expression. *)
 let rec read_expression (input : datum) : expression =
-  let rec f (data : datum) : expression list =
+
+  (* Helper Function: takes in Scheme3110 list and applies read to each datum
+   *  and returns the expression list. *)
+  let rec eval_list (data: datum): expression list =
       match data with
       | Cons (d1, Nil) -> [read_expression d1]
-      | Cons (d1, d2) -> (read_expression d1) :: (f d2)
+      | Cons (d1, d2) -> (read_expression d1) :: (eval_list d2)
       | _ -> failwith "gfy" in
+
+  (* Helper Function: takes in an expression list and runs read_expression*)
+  let elist_to_varlist (lst: expression list): variable list =
+    List.rev (List.fold_left 
+     (fun a x -> match x with
+                |ExprVariable v -> v::a
+                |_ -> a)
+     [] lst) in
+
   match input with
+  (* Dealing with Variables *)
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
       ExprVariable (Identifier.variable_of_identifier id)
   | Atom (Boolean tf) -> 
+  (* Dealing with Booleans *)
       ExprSelfEvaluating (SEBoolean tf)
   | Atom (Integer n) -> 
+  (* Dealing with Integers *)
       ExprSelfEvaluating (SEInteger n)
-  | Cons (Atom(Identifier id),d2) when (Identifier.string_of_identifier id) = "quote" ->
-      ExprQuote d2
+  (* Dealing with Quotes*)
+  | Cons (Atom(Identifier id),d2) 
+      when (Identifier.string_of_identifier id) = "quote" ->
+        ExprQuote d2
+  (* Dealing with Ifs *)
   | Cons (Atom(Identifier id), Cons (d1, Cons (d2, Cons (d3 , Nil))))
      when (Identifier.string_of_identifier id) = "if" -> 
-        ExprIf ((read_expression d1), (read_expression d2), (read_expression d3))
+        ExprIf ((read_expression d1),(read_expression d2),(read_expression d3))
+  (* Dealing with Lambdas *)
+  | Cons (Atom(Identifier id), Cons (list1, list2))
+      when (Identifier.string_of_identifier id) = "lambda" ->
+        ExprLambda ((elist_to_varlist (eval_list list1)), (eval_list list2))
+  (* Dealing with Builtin Procedures*)
   | Cons (d1,d2) ->
-      let temp = f (Cons (d1,d2)) in
+      let temp = eval_list (Cons (d1,d2)) in
       ExprProcCall (List.hd (temp), List.tl (temp))
+  (* Dealing with Nil *)
   | Nil ->
       ExprQuote Nil
   | _ -> failwith "Everything else"
 
 (* Parses a datum into a toplevel input. *)
 let read_toplevel (input : datum) : toplevel =
+  let datum_to_var input =
+    match (read_expression input) with
+    | ExprVariable x -> x
+    | _ -> failwith "Wasn't going to be a variable" in
+
   match input with
+  | Cons (Atom (Identifier id), Cons (var, expr)) 
+    when (Identifier.string_of_identifier id) = "define" -> 
+      ToplevelDefinition ((datum_to_var var), (read_expression expr))
   | _ -> ToplevelExpression (read_expression input)
+
 
 (* This function returns an initial environment with any built-in
    bound variables. *)
 let rec initial_environment () : environment =
+  let ans = ref Environment.empty_environment in 
+
   let variable_of_string s = 
     Identifier.variable_of_identifier (Identifier.identifier_of_string s) in 
-  let ans = ref Environment.empty_environment in 
+
   let car l env = 
     match l with 
     | [ValDatum (Cons (a,b))] -> ValDatum a
@@ -115,25 +150,43 @@ let rec initial_environment () : environment =
    would be a helper function for each pattern in the match
    statement. *)
 and eval (expression : expression) (env : environment) : value =
+  (* Helper Function: returns true if l contains all unique elements,
+   * false otherwise*)
+  let rec unique l = 
+    match l with
+    | [] -> true 
+    | [x] -> true
+    | h::t -> (List.mem h t) && (unique t) in 
+
   match expression with
   | ExprSelfEvaluating (SEInteger x) ->
       ValDatum (Atom (Integer x))
+
   | ExprSelfEvaluating (SEBoolean tf) ->
       ValDatum (Atom (Boolean tf))
+
   | ExprVariable var ->
       if (Environment.is_bound env var) then
           !(Environment.get_binding env var)
       else
           failwith "Variable"
+
   | ExprQuote (Cons (q, _)) ->
       ValDatum q
-  | ExprLambda (_, _) ->
-      failwith "SAYY"
+
+  | ExprLambda (vlist, elist) ->
+      if unique vlist then 
+        ValProcedure (ProcLambda (vlist, env, elist))
+      else
+        failwith "Variables were not unique"
+
   | ExprProcCall (e1, lst) ->
-      let vlst = List.rev (List.fold_left (fun a x -> (eval x env)::a) [] lst) in
+      let vlst = List.rev (List.fold_left (fun a x -> (eval x env)::a)
+          [] lst) in
       (match (eval e1 env) with
       | ValProcedure (ProcBuiltin f) -> f vlst env
       | _ -> failwith "not a function")
+
   | ExprIf (e1, e2, e3) ->
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
           eval e3 env
@@ -154,8 +207,15 @@ let eval_toplevel (toplevel : toplevel) (env : environment) :
       value * environment =
   match toplevel with
   | ToplevelExpression expression -> (eval expression env, env)
-  | ToplevelDefinition (_, _)     ->
-     failwith "I couldn't have done it without the Rower!"
+  | ToplevelDefinition (var, expr) ->
+    if Environment.is_bound env var then 
+      let env' = Environment.add_binding env (var, ref (eval expr env)) in 
+      (eval expr env', env')
+    else
+      let env' = Environment.add_binding 
+        env (var, ref (eval (read_expression Nil) env)) in 
+      (eval expr env', env')
+
 
 let rec string_of_value value =
   let rec string_of_datum datum =
