@@ -36,11 +36,13 @@ let rec read_expression (input : datum) : expression =
   (* Dealing with Variables *)
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
       ExprVariable (Identifier.variable_of_identifier id)
-  | Atom (Boolean tf) -> 
-  (* Dealing with Booleans *)
+    (* Dealing with Booleans *)
+  | Atom (Boolean tf) 
+  | Cons (Atom (Boolean tf), Nil)-> 
       ExprSelfEvaluating (SEBoolean tf)
-  | Atom (Integer n) -> 
   (* Dealing with Integers *)
+  | Atom (Integer n)
+  | Cons (Atom (Integer n), Nil) -> 
       ExprSelfEvaluating (SEInteger n)
   (* Dealing with Quotes*)
   | Cons (Atom(Identifier id),d2) 
@@ -71,7 +73,7 @@ let read_toplevel (input : datum) : toplevel =
     | _ -> failwith "Wasn't going to be a variable" in
 
   match input with
-  | Cons (Atom (Identifier id), Cons (var, expr)) 
+  | Cons (Atom (Identifier id), Cons (var, Cons (expr, Nil))) 
     when (Identifier.string_of_identifier id) = "define" -> 
       ToplevelDefinition ((datum_to_var var), (read_expression expr))
   | _ -> ToplevelExpression (read_expression input)
@@ -156,7 +158,7 @@ and eval (expression : expression) (env : environment) : value =
     match l with
     | [] -> true 
     | [x] -> true
-    | h::t -> (List.mem h t) && (unique t) in 
+    | h::t -> (not (List.mem h t)) && (unique t) in 
 
   match expression with
   | ExprSelfEvaluating (SEInteger x) ->
@@ -173,6 +175,9 @@ and eval (expression : expression) (env : environment) : value =
 
   | ExprQuote (Cons (q, _)) ->
       ValDatum q
+
+  | ExprQuote (Nil) ->
+      ValDatum Nil
 
   | ExprLambda (vlist, elist) ->
       if unique vlist then 
@@ -209,12 +214,14 @@ let eval_toplevel (toplevel : toplevel) (env : environment) :
   | ToplevelExpression expression -> (eval expression env, env)
   | ToplevelDefinition (var, expr) ->
     if Environment.is_bound env var then 
-      let env' = Environment.add_binding env (var, ref (eval expr env)) in 
-      (eval expr env', env')
+      let tmp = Environment.get_binding env var in 
+      tmp := eval expr env;
+      (eval (ExprQuote Nil) env, env)
     else
       let env' = Environment.add_binding 
-        env (var, ref (eval (read_expression Nil) env)) in 
-      (eval expr env', env')
+                 Environment.empty_environment 
+                 (var, ref (eval (read_expression Nil) env)) in 
+      (eval expr env, env')
 
 
 let rec string_of_value value =
