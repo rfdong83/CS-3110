@@ -36,13 +36,15 @@ let rec read_expression (input : datum) : expression =
   (* Dealing with Variables *)
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
       ExprVariable (Identifier.variable_of_identifier id)
-  | Atom (Boolean tf) -> 
-  (* Dealing with Booleans *)
+    (* Dealing with Booleans *)
+  | Atom (Boolean tf) 
+  | Cons (Atom (Boolean tf), Nil)-> 
       ExprSelfEvaluating (SEBoolean tf)
-  | Atom (Integer n) 
-  | Cons (Atom (Integer n), Nil) -> 
+
   (* Dealing with Integers *)
-      ExprSelfEvaluating (SEInteger n) 
+  | Atom (Integer n)
+  | Cons (Atom (Integer n), Nil) -> 
+      ExprSelfEvaluating (SEInteger n)
   (* Dealing with Quotes*)
   | Cons (Atom(Identifier id),d2) 
       when (Identifier.string_of_identifier id) = "quote" ->
@@ -175,8 +177,8 @@ and eval (expression : expression) (env : environment) : value =
   | ExprQuote (Cons (q, _)) ->
       ValDatum q
 
-  | ExprQuote Nil ->
-      ValDatum Nil 
+  | ExprQuote (Nil) ->
+      ValDatum Nil
 
   | ExprLambda (vlist, elist) ->
       if unique vlist then 
@@ -222,8 +224,6 @@ let eval_toplevel (toplevel : toplevel) (env : environment) :
       let value = eval expr env' in 
       Environment.get_binding env' var := value;
       ((eval (read_expression Nil) env), env')
-
-
 
 let rec string_of_value value =
   let rec string_of_datum datum =
