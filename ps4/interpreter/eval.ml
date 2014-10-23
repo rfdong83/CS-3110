@@ -16,6 +16,11 @@ and environment = value ref Environment.environment
 
 (* Parses a datum into an expression. *)
 let rec read_expression (input : datum) : expression =
+  let rec f (data : datum) : expression list =
+      match data with
+      | Cons (d1, Nil) -> [read_expression d1]
+      | Cons (d1, d2) -> (read_expression d1) :: (f d2)
+      | _ -> failwith "gfy" in
   match input with
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
       ExprVariable (Identifier.variable_of_identifier id)
@@ -28,8 +33,9 @@ let rec read_expression (input : datum) : expression =
   | Cons (Atom(Identifier id), Cons (d1, Cons (d2, Cons (d3 , Nil))))
      when (Identifier.string_of_identifier id) = "if" -> 
         ExprIf ((read_expression d1), (read_expression d2), (read_expression d3))
-  | Cons (d1,Cons (d2, d3)) ->
-      ExprProcCall((read_expression d1), [(read_expression d2)])
+  | Cons (d1,d2) ->
+      let temp = f (Cons (d1,d2)) in
+      ExprProcCall (List.hd (temp), List.tl (temp))
   | Nil ->
       ExprQuote Nil
   | _ -> failwith "Everything else"
