@@ -23,17 +23,6 @@ let rec read_expression (input : datum) : expression =
   match input with
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
       ExprVariable (Identifier.variable_of_identifier id)
-<<<<<<< HEAD
-  | Atom (Identifier id) ->
-     (* Above match case didn't succeed, so id is not a valid variable. *)
-     failwith "Hiya"
-  | Atom (Integer x) ->
-      ExprSelfEvaluating (SEInteger x)
-  | Atom (Boolean tf) ->
-      ExprSelfEvaluating (SEBoolean tf)
-  | _ ->
-      ExprQuote Nil
-=======
   | Atom (Boolean tf) -> 
       ExprSelfEvaluating (SEBoolean tf)
   | Atom (Integer n) -> 
@@ -49,8 +38,6 @@ let rec read_expression (input : datum) : expression =
   | Nil ->
       ExprQuote Nil
   | _ -> failwith "Everything else"
-
->>>>>>> 8be7a63199bc46cc2275dbc6b62415c090cdb041
 
 (* Parses a datum into a toplevel input. *)
 let read_toplevel (input : datum) : toplevel =
