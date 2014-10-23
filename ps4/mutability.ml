@@ -16,7 +16,7 @@ Ex: tabulate (fun x -> x*x) 4 = {[0,1,4,9]}
 *)
 let tabulate f n = 
   Array.init n f 
-  
+
 
 (*
 Recreates fold_left on arrays without using the rec keyword or the use of
