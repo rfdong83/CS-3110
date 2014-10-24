@@ -13,6 +13,8 @@ and value =
 and binding = value ref Environment.binding
 and environment = value ref Environment.environment
 
+exception Error
+
 (* Parses a datum into an expression. *)
 let rec read_expression (input : datum) : expression =
 
@@ -165,60 +167,66 @@ and eval (expression : expression) (env : environment) : value =
     List.rev (List.fold_left (fun a x -> (eval x env)::a)
         [] lst) in
 
-  match expression with
-  | ExprSelfEvaluating (SEInteger x) ->
-      ValDatum (Atom (Integer x))
+  let self_evaluating_helper (se: self_evaluating) (env: environment) : value =
+    match se with
+    | SEInteger x -> ValDatum (Atom (Integer x))
+    | SEBoolean tf -> ValDatum (Atom (Boolean tf)) in
 
-  | ExprSelfEvaluating (SEBoolean tf) ->
-      ValDatum (Atom (Boolean tf))
-
-  | ExprVariable var ->
+  let variable_helper (var: variable) (env: environment) : value =
       if (Environment.is_bound env var) then
           !(Environment.get_binding env var)
       else
-          failwith "Variable"
+          raise Error in
 
-  | ExprQuote (Cons (q, _)) ->
-      ValDatum q
+  let quote_helper (quote: datum) (env: environment) : value =
+      match quote with
+      | Atom a -> ValDatum (Atom a)
+      | Cons (q, _) -> ValDatum q
+      | Nil -> ValDatum Nil in
 
-  | ExprQuote (Nil) ->
-      ValDatum Nil
-
-  | ExprLambda (vlist, elist) ->
+  let lambda_helper (vlist, elist : variable list * expression list) 
+                    (env: environment) : value =
       if unique vlist then 
-        ValProcedure (ProcLambda (vlist, env, elist))
-      else
-        failwith "Variables were not unique"
+          ValProcedure (ProcLambda (vlist, env, elist))
+        else
+          raise Error in
 
-  | ExprProcCall (e1, lst) ->
-      (match (eval e1 env) with
-      | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist lst) env
-      | ValProcedure (ProcLambda (varlist, env, h::t)) -> 
-          if List.length varlist = List.length lst then
-              let env' = List.fold_right2 
-                (fun x1 x2 a -> Environment.add_binding a (x1,ref x2))
-                varlist (elist_to_vlist lst) env in 
-              eval (ExprProcCall (h, t)) env'
-          else
-              failwith "Insufficent arugments"
-      | ValDatum data ->
-          eval (read_expression data) env
-      | _ -> failwith "not happening"
-      )
+  let procedure_helper (e1, lst : expression * expression list)
+                       (env: environment) : value =
+      match (eval e1 env) with
+        | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist lst) env
+        | ValProcedure (ProcLambda (varlist, env, h::t)) -> 
+            if List.length varlist = List.length lst then
+                let env' = List.fold_right2 
+                  (fun x1 x2 a -> Environment.add_binding a (x1,ref x2))
+                  varlist (elist_to_vlist lst) env in 
+                eval (ExprProcCall (h, t)) env'
+            else
+                raise Error
+        | ValDatum data ->
+            eval (read_expression data) env
+        | _ -> raise Error in
 
-  | ExprIf (e1, e2, e3) ->
+  let if_helper (e1, e2, e3 : expression * expression * expression)
+                (env: environment) : value =
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
-          eval e3 env
-      else
-          eval e2 env
+            eval e3 env
+        else
+            eval e2 env in
 
+  match expression with
+  | ExprSelfEvaluating se -> self_evaluating_helper se env
+  | ExprVariable var -> variable_helper var env
+  | ExprQuote quote -> quote_helper quote env
+  | ExprLambda (vlist, elist) -> lambda_helper (vlist, elist) env
+  | ExprProcCall (e1, lst) -> procedure_helper (e1, lst) env
+  | ExprIf (e1, e2, e3) -> if_helper (e1, e2, e3) env
   | ExprAssignment (_, _) ->
      failwith "Say something funny, Rower!"
   | ExprLet (_, _)
   | ExprLetStar (_, _)
   | ExprLetRec (_, _)     ->
      failwith "Ahahaha!  That is classic Rower."
-  | _ -> failwith "missing stuff"
 
 (* Evaluates a toplevel input down to a value and an output environment in a
    given environment. *)
