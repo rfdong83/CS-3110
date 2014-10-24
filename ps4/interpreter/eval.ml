@@ -36,6 +36,19 @@ let rec read_expression (input : datum) : expression =
                 |_ -> a)
      [] lst) in
 
+  let expr_to_var (expr: expression): variable = 
+    match expr with 
+    | ExprVariable v -> v
+    | _ -> failwith "That isn't going to be a variable..." in
+
+  let rec lst_to_bind (lst: datum): let_binding list =
+    match lst with
+    | Cons (Cons(v, e), Nil) -> 
+        [((expr_to_var (read_expression v)), (read_expression e))]
+    | Cons (Cons (v1, e1), rest) -> 
+        (expr_to_var((read_expression v1)), (read_expression e1))::(lst_to_bind rest)
+    | _ -> failwith "That wasn't a Scheme list.." in 
+
   match input with
   (* Dealing with Variables *)
   | Atom (Identifier id) when Identifier.is_valid_variable id ->
@@ -65,6 +78,18 @@ let rec read_expression (input : datum) : expression =
       when (Identifier.string_of_identifier id) = "set!" ->
         ExprAssignment 
         ((Identifier.variable_of_identifier var),(read_expression expr))
+  (* Dealing with LetStars *)
+  | Cons (Atom(Identifier id), Cons (lst, elist))
+    when (Identifier.string_of_identifier id) = "let*" ->
+        ExprLetStar ((lst_to_bind lst),(eval_list elist))
+  (* Dealing with Lets *)
+  | Cons (Atom(Identifier id), Cons (lst, elist))
+    when (Identifier.string_of_identifier id) = "let" ->
+        ExprLet ((lst_to_bind lst),(eval_list elist))
+  (* Dealing with LetRecs *)
+  | Cons (Atom(Identifier id), Cons (lst, elist))
+    when (Identifier.string_of_identifier id) = "letrec" ->
+        ExprLet ((lst_to_bind lst),(eval_list elist))
   (* Dealing with Procedures*)
   | Cons (d1,d2) ->
       let temp = eval_list (Cons (d1,d2)) in
@@ -92,7 +117,7 @@ let read_toplevel (input : datum) : toplevel =
    bound variables. *)
 let rec initial_environment () : environment =
   let ans = ref Environment.empty_environment in 
-
+  (* Helper Function: takes a string and returns a variable with that name*)
   let variable_of_string s = 
     Identifier.variable_of_identifier (Identifier.identifier_of_string s) in 
 
@@ -183,7 +208,7 @@ and eval (expression : expression) (env : environment) : value =
       if (Environment.is_bound env var) then
           !(Environment.get_binding env var)
       else
-          raise Error in
+          failwith "variable helper" in
 
   let quote_helper (quote: datum) (env: environment) : value =
       match quote with
@@ -196,7 +221,7 @@ and eval (expression : expression) (env : environment) : value =
       if unique vlist then 
           ValProcedure (ProcLambda (vlist, env, elist))
         else
-          raise Error in
+          failwith "lambda helper" in
 
   let procedure_helper (e1, lst : expression * expression list)
                        (env: environment) : value =
@@ -209,10 +234,10 @@ and eval (expression : expression) (env : environment) : value =
                   varlist (elist_to_vlist lst) env in 
                 eval (ExprProcCall (h, t)) env'
             else
-                raise Error
+                failwith "procedure error 1"
         | ValDatum data ->
             eval (read_expression data) env
-        | _ -> raise Error in
+        | _ -> failwith "procedure error 2" in
 
   let if_helper (e1, e2, e3 : expression * expression * expression)
                 (env: environment) : value =
@@ -227,7 +252,33 @@ and eval (expression : expression) (env : environment) : value =
       bind := (eval expr env);
       ValDatum Nil
     else
-      raise Error in 
+      failwith "assignment error" in 
+
+  let let_helper (blist, elist) env = 
+      let tuple = List.fold_right (fun x a -> match x with 
+                                  | (v,e) -> (v::fst(a),e::snd(a))) blist ([],[]) in
+      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) env in
+
+
+  let letstar_helper (blist, elist) env = 
+      let env' = ref env in
+      let tuple = List.fold_left (fun a x -> match x with 
+                                  | (v,e) -> 
+                                  env' := Environment.add_binding !env' 
+                                          (v, ref (eval e !env')); 
+                                  (v::fst(a),e::snd(a))) ([],[]) blist in
+      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in
+
+
+  let letrec_helper (blist, elist) env =
+      let env' = ref env in
+      let tuple = List.fold_left (fun a x -> match x with 
+                                  | (v,e) -> 
+                                  env' := Environment.add_binding !env'
+                                          (v, ref (eval (read_expression Nil) !env'));
+                                  Environment.get_binding !env' v := (eval e !env'); 
+                                  (v::fst(a),e::snd(a))) ([],[]) blist in
+      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in      
 
 
   match expression with
@@ -238,10 +289,9 @@ and eval (expression : expression) (env : environment) : value =
   | ExprProcCall (e1, lst) -> procedure_helper (e1, lst) env
   | ExprIf (e1, e2, e3) -> if_helper (e1, e2, e3) env
   | ExprAssignment (var, expr) -> assignment_helper (var, expr) env
-  | ExprLet (_, _)
-  | ExprLetStar (_, _)
-  | ExprLetRec (_, _)     ->
-     failwith "Ahahaha!  That is classic Rower."
+  | ExprLetStar (blist, elist) -> letstar_helper (blist, elist) env
+  | ExprLet (blist,elist) -> let_helper (blist, elist) env
+  | ExprLetRec (blist, elist) -> letrec_helper (blist, elist) env
 
 (* Evaluates a toplevel input down to a value and an output environment in a
    given environment. *)
