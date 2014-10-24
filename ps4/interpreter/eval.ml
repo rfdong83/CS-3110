@@ -1,5 +1,7 @@
 open Ast
 
+exception Error
+
 type builtin = value list -> environment -> value
 
 and procedure =
@@ -56,7 +58,12 @@ let rec read_expression (input : datum) : expression =
   | Cons (Atom(Identifier id), Cons (list1, list2))
       when (Identifier.string_of_identifier id) = "lambda" ->
         ExprLambda ((elist_to_varlist (eval_list list1)), (eval_list list2))
-  (* Dealing with Builtin Procedures*)
+  (* Dealing with Assignments *)
+  | Cons (Atom(Identifier id), Cons (Atom(Identifier var), Cons (expr, Nil)))
+      when (Identifier.string_of_identifier id) = "set!" ->
+        ExprAssignment 
+        ((Identifier.variable_of_identifier var),(read_expression expr))
+  (* Dealing with Procedures*)
   | Cons (d1,d2) ->
       let temp = eval_list (Cons (d1,d2)) in
       ExprProcCall (List.hd (temp), List.tl (temp))
@@ -165,6 +172,14 @@ and eval (expression : expression) (env : environment) : value =
     List.rev (List.fold_left (fun a x -> (eval x env)::a)
         [] lst) in
 
+  let assignment_helper (var,expr) env =
+    if (Environment.is_bound env var) then
+      let bind = Environment.get_binding env var in 
+      bind := (eval expr env);
+      ValDatum Nil
+    else
+      raise Error in 
+
   match expression with
   | ExprSelfEvaluating (SEInteger x) ->
       ValDatum (Atom (Integer x))
@@ -200,7 +215,7 @@ and eval (expression : expression) (env : environment) : value =
                 varlist (elist_to_vlist lst) env in 
               eval (ExprProcCall (h, t)) env'
           else
-              failwith "Insufficent arugments"
+              raise Error
       | ValDatum data ->
           eval (read_expression data) env
       | _ -> failwith "not happening"
@@ -212,8 +227,9 @@ and eval (expression : expression) (env : environment) : value =
       else
           eval e2 env
 
-  | ExprAssignment (_, _) ->
-     failwith "Say something funny, Rower!"
+  | ExprAssignment (var, expr) ->
+      assignment_helper (var, expr) env
+
   | ExprLet (_, _)
   | ExprLetStar (_, _)
   | ExprLetRec (_, _)     ->
