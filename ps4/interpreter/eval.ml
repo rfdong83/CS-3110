@@ -1,4 +1,4 @@
-module Identifier = struct
+(*module Identifier = struct
 type identifier = string
 
 let identifier_of_string str = String.lowercase str
@@ -85,13 +85,13 @@ type toplevel =
   | ToplevelDefinition of variable * expression
 
 end
-
+*)
 (* <<<<<<<<<<<<<<<<<<<<<<<< DELETE THIS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> *)
 
 
 
-open Environment
-open Identifier
+(*open Environment
+open Identifier*)
 open Ast
 
 exception Error
@@ -137,9 +137,9 @@ let rec read_expression (input : datum) : expression =
 
   let rec lst_to_bind (lst: datum): let_binding list =
     match lst with
-    | Cons (Cons(v, e), Nil) -> 
+    | Cons (Cons(v, Cons (e, Nil)), Nil) -> 
         [((expr_to_var (read_expression v)), (read_expression e))]
-    | Cons (Cons (v1, e1), rest) -> 
+    | Cons (Cons (v1, Cons (e1, Nil)), rest) -> 
         ((expr_to_var((read_expression v1))), (read_expression e1))::(lst_to_bind rest)
     | _ -> failwith "That wasn't a Scheme list.." in 
 
@@ -326,8 +326,6 @@ and eval (expression : expression) (env : environment) : value =
                        (env: environment) : value =
       match (eval funct env) with
       | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist inputs) env
-
-
       | ValProcedure (ProcLambda (parameters, env, body)) ->
           if List.length parameters = List.length inputs then
               let values = (elist_to_vlist inputs) in
@@ -339,8 +337,6 @@ and eval (expression : expression) (env : environment) : value =
                                           Environment.add_binding a (x1, ref x2)) 
                                           env parameters values in
               List.fold_left (fun a x -> eval x env') (ValDatum Nil) body
-
-              
           else
               failwith "Invalid input numbers"
       | _ -> failwith "procedure error" in
@@ -371,30 +367,38 @@ and eval (expression : expression) (env : environment) : value =
                        else 
                            Environment.add_binding env (var, ref (eval expr env)) in
 
-  let let_helper (blist, elist) (env: environment): value = 
+  let dummy_binding (binding: let_binding) (env: environment) : environment =
+      match binding with
+      | (var, expr) -> if Environment.is_bound env var then
+                           let value = ValDatum Nil in
+                           (Environment.get_binding env var) := value;
+                           env
+                       else 
+                           Environment.add_binding env (var, ref (ValDatum Nil)) in
+
+  let letstar_helper (blist, elist) (env: environment): value = 
       let env' = List.fold_left (fun a x -> eval_binding x a) env blist in
       List.fold_left (fun a x -> eval x env') (ValDatum Nil) elist in
     
-  let letstar_helper (blist,elist) (env: environment): value = 
-      let env' = ref env in
-      let tuple = List.fold_left (fun a x -> match x with 
-                                  | (v,e) -> 
-                                  env' := Environment.add_binding !env' 
-                                          (v, ref (eval e !env')); 
-                                  (v::fst(a),e::snd(a))) ([],[]) blist in
-      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in   
-
+  let let_helper (blist,elist) (env: environment): value = 
+      let env' = List.fold_left 
+                  (fun a x -> 
+                  Environment.combine_environments a (eval_binding x env))
+                  Environment.empty_environment blist in
+      List.fold_left (fun a x -> eval x env') (ValDatum Nil) elist in
 
   let letrec_helper (blist, elist) env =
-      let env' = ref env in
+      (*let env' = ref env in
       let tuple = List.fold_left (fun a x -> match x with 
                                   | (v,e) -> 
                                   env' := Environment.add_binding !env'
                                           (v, ref (eval (read_expression Nil) !env'));
                                   Environment.get_binding !env' v := (eval e !env'); 
                                   (v::fst(a),e::snd(a))) ([],[]) blist in
-      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in      
-
+      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in*)
+      let dummy_env = List.fold_left (fun a x -> dummy_binding x a) env blist in
+      let env' = List.fold_left (fun a x -> eval_binding x a) dummy_env blist in
+      List.fold_left (fun a x -> eval x env') (ValDatum Nil) elist in   
 
   match expression with
   | ExprSelfEvaluating se -> self_evaluating_helper se env

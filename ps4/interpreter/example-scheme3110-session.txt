@@ -154,7 +154,7 @@ zardoz> (letrec ((factorial (lambda (x)
 120
 zardoz> ;; We can also do it like this:
         (define factorial (lambda (x) 
-                            (if (eqv? x 0)
+                            (if (equal? x 0)
                                 1
                               (* x (factorial (+ x -1))))))
 
