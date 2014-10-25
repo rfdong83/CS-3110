@@ -227,22 +227,26 @@ and eval (expression : expression) (env : environment) : value =
         else
           failwith "lambda helper" in
 
-  let procedure_helper ((e1, exprlst): expression * expression list)
+
+  let procedure_helper (funct, inputs : expression * expression list)
                        (env: environment) : value =
-      match (eval e1 env) with
-        | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist exprlst) env
-        | ValProcedure (ProcLambda (varlist, env, h::t)) -> 
-            (*if List.length varlist = List.length exprlst then
-                let env' = List.fold_left2 
-                  (fun a x1 x2 -> Environment.add_binding a (x1,ref x2))
-                  env varlist (elist_to_vlist exprlst) in 
-                eval (ExprProcCall (h, t)) env'
-            else
-                failwith "Invalid number of inputs"*)
-            (ValDatum (Atom (Integer (List.length varlist))))
-        | ValDatum data ->
-            eval (read_expression data) env
-        | _ -> failwith "procedure error 2" in
+      match (eval funct env) with
+      | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist inputs) env
+      | ValProcedure (ProcLambda (parameters, env, h::t)) -> 
+          (* Making sure that there are same number of inputs and parameters *)
+          if List.length parameters = List.length inputs then
+              (* Create temporary call frame with new bindings to evaluate in *)
+              let env' = List.fold_left2 
+                (fun a x1 x2 -> Environment.add_binding a (x1,ref x2))
+                env parameters (elist_to_vlist inputs) in 
+              (* Evaluate the rest of the call in this newly created call frame *)
+              eval (ExprProcCall (h, t)) env'
+          else
+              (ValDatum (Atom (Integer (List.length parameters))))
+      | ValDatum data ->
+          eval (read_expression data) env
+      | _ -> failwith "procedure error 2" in
+
 
   let if_helper (e1, e2, e3 : expression * expression * expression)
                 (env: environment) : value =
@@ -260,8 +264,8 @@ and eval (expression : expression) (env : environment) : value =
       failwith "assignment error" in 
 
   let let_helper (blist, elist) (env: environment): value = 
-      let env' = List.fold_left 
-                 (fun a x -> match x with 
+      (*let env' = List.fold_left 
+          (fun a x -> match x with 
                       | (v,e) -> let ans = eval e a in
                                   if Environment.is_bound a v then
                                     let thing = (Environment.get_binding a v) in
@@ -269,11 +273,14 @@ and eval (expression : expression) (env : environment) : value =
                                     a
                                  else
                                   Environment.add_binding a ((v, ref ans)))
-                  env blist in
-      List.fold_left (fun a x -> eval x env') (eval (List.hd elist) env') elist in
+         env blist in
+         eval (ExprProcCall ((List.hd elist), (List.tl elist))) env' in *)
+      let tuple = List.fold_left (fun a x -> match x with 
+                                  | (v, h::t) -> 
+                                  (v::fst(a),e::snd(a))) ([],[]) blist in
+      eval (ExprProcCall (ExprLambda ((fst tuple), t) , (snd tuple))) env in
     
-  let letstar_helper (blist,elist)
-                     (env: environment): value = 
+  let letstar_helper (blist,elist) (env: environment): value = 
       let env' = ref env in
       let tuple = List.fold_left (fun a x -> match x with 
                                   | (v,e) -> 
@@ -316,7 +323,7 @@ let eval_toplevel (toplevel : toplevel) (env : environment) :
     if Environment.is_bound env var then 
       let tmp = (Environment.get_binding env var) in 
       tmp := (eval expr env);
-      ((eval (read_expression Nil) env), env)
+      (ValDatum Nil, env)
     else
       let env' = Environment.add_binding env 
                   (var, ref (eval (read_expression Nil) env)) in
