@@ -232,8 +232,8 @@ and eval (expression : expression) (env : environment) : value =
       match (eval e1 env) with
         | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist lst) env
         | ValProcedure (ProcLambda (varlist, env, h::t)) -> 
-            if List.length varlist > List.length lst then
-                (*let env' = List.fold_left2 
+            if List.length varlist = List.length lst then
+                  (*let env' = List.fold_left2 
                   (fun a x1 x2 -> Environment.add_binding a (x1,ref x2))
                   env varlist (elist_to_vlist lst) in 
                 eval (ExprProcCall (h, t)) env'*)
@@ -245,7 +245,7 @@ and eval (expression : expression) (env : environment) : value =
             eval (read_expression data) env
         | _ -> failwith "procedure error 2" in
 
-  let if_helper (e1, e2, e3 : read_expression * expression * expression)
+  let if_helper (e1, e2, e3 : expression * expression * expression)
                 (env: environment) : value =
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
             eval e3 env
@@ -261,7 +261,7 @@ and eval (expression : expression) (env : environment) : value =
       failwith "assignment error" in 
 
   let let_helper (blist, elist) (env: environment): value = 
-      let env' = List.fold_left 
+      (*let env' = List.fold_left 
           (fun a x -> match x with 
                       | (v,e) -> let ans = eval e a in
                                   if Environment.is_bound a v then
@@ -271,10 +271,14 @@ and eval (expression : expression) (env : environment) : value =
                                  else
                                   Environment.add_binding a ((v, ref ans)))
          env blist in
-         eval (ExprProcCall ((List.hd elist), (List.tl elist))) env' in 
+         eval (ExprProcCall ((List.hd elist), (List.tl elist))) env' in *)
+      let tuple = List.fold_left (fun a x -> match x with 
+                                  | (v,e) -> 
+                                  (v::fst(a),e::snd(a))) ([],[]) blist in
+      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) env in
     
-  let letstar_helper (blist,elist)
-                     (env: environment): value = 
+    
+  let letstar_helper (blist,elist) (env: environment): value = 
       let env' = ref env in
       let tuple = List.fold_left (fun a x -> match x with 
                                   | (v,e) -> 
