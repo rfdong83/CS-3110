@@ -235,17 +235,18 @@ and eval (expression : expression) (env : environment) : value =
             if List.length varlist > List.length lst then
                 (*let env' = List.fold_left2 
                   (fun a x1 x2 -> Environment.add_binding a (x1,ref x2))
-                  env varlist (elist_to_vlist lst) in 
-                eval (ExprProcCall (h, t)) env'*)
+                  env varlist (elist_to_vlist lst) in *)
+                failwith "hit here" 
+                (*eval (ExprProcCall (h, t)) env'*)
                 (*ValDatum (Atom (Identifier (Identifier.identifier_of_string((Identifier.string_of_variable(List.hd varlist))))))*)
-                ValDatum (Atom (Integer (List.length lst)))
+                (*ValDatum (Atom (Integer (List.length lst)))*)
             else
                 failwith "Invalid number of inputs"
         | ValDatum data ->
             eval (read_expression data) env
         | _ -> failwith "procedure error 2" in
 
-  let if_helper (e1, e2, e3 : read_expression * expression * expression)
+  let if_helper (e1, e2, e3 : expression * expression * expression)
                 (env: environment) : value =
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
             eval e3 env
@@ -343,7 +344,7 @@ let rec string_of_value value =
     let string_list = (string_of_datum car) :: (strings_of_cons cdr) in
     "(" ^ (String.concat " " string_list) ^ ")" in
   
-  match value with
+  match value with  
   | ValDatum (datum) -> string_of_datum datum
   | ValProcedure (ProcBuiltin p) -> "#<builtin>"
   | ValProcedure (ProcLambda (_, _, _)) -> "#<lambda>"
