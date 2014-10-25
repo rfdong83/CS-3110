@@ -82,18 +82,22 @@ let rec read_expression (input : datum) : expression =
   | Cons (Atom(Identifier id), Cons (lst, elist))
     when (Identifier.string_of_identifier id) = "let*" ->
         ExprLetStar ((lst_to_bind lst),(eval_list elist))
+
   (* Dealing with Lets *)
   | Cons (Atom(Identifier id), Cons (lst, elist))
     when (Identifier.string_of_identifier id) = "let" ->
         ExprLet ((lst_to_bind lst),(eval_list elist))
+
   (* Dealing with LetRecs *)
   | Cons (Atom(Identifier id), Cons (lst, elist))
     when (Identifier.string_of_identifier id) = "letrec" ->
         ExprLet ((lst_to_bind lst),(eval_list elist))
+
   (* Dealing with Procedures*)
   | Cons (d1,d2) ->
       let temp = eval_list (Cons (d1,d2)) in
       ExprProcCall (List.hd (temp), List.tl (temp))
+
   (* Dealing with Nil *)
   | Nil ->
       ExprQuote Nil
@@ -228,18 +232,20 @@ and eval (expression : expression) (env : environment) : value =
       match (eval e1 env) with
         | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist lst) env
         | ValProcedure (ProcLambda (varlist, env, h::t)) -> 
-            if List.length varlist = List.length lst then
-                let env' = List.fold_right2 
-                  (fun x1 x2 a -> Environment.add_binding a (x1,ref x2))
-                  varlist (elist_to_vlist lst) env in 
-                eval (ExprProcCall (h, t)) env'
+            if List.length varlist > List.length lst then
+                (*let env' = List.fold_left2 
+                  (fun a x1 x2 -> Environment.add_binding a (x1,ref x2))
+                  env varlist (elist_to_vlist lst) in 
+                eval (ExprProcCall (h, t)) env'*)
+                (*ValDatum (Atom (Identifier (Identifier.identifier_of_string((Identifier.string_of_variable(List.hd varlist))))))*)
+                ValDatum (Atom (Integer (List.length lst)))
             else
-                failwith "procedure error 1"
+                failwith "Invalid number of inputs"
         | ValDatum data ->
             eval (read_expression data) env
         | _ -> failwith "procedure error 2" in
 
-  let if_helper (e1, e2, e3 : expression * expression * expression)
+  let if_helper (e1, e2, e3 : read_expression * expression * expression)
                 (env: environment) : value =
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
             eval e3 env
@@ -254,20 +260,28 @@ and eval (expression : expression) (env : environment) : value =
     else
       failwith "assignment error" in 
 
-  let let_helper (blist, elist) env = 
-      let tuple = List.fold_right (fun x a -> match x with 
-                                  | (v,e) -> (v::fst(a),e::snd(a))) blist ([],[]) in
-      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) env in
-
-
-  let letstar_helper (blist, elist) env = 
+  let let_helper (blist, elist) (env: environment): value = 
+      let env' = List.fold_left 
+          (fun a x -> match x with 
+                      | (v,e) -> let ans = eval e a in
+                                  if Environment.is_bound a v then
+                                    let thing = (Environment.get_binding env v) in
+                                    thing := ans;
+                                    a
+                                 else
+                                  Environment.add_binding a ((v, ref ans)))
+         env blist in
+         eval (ExprProcCall ((List.hd elist), (List.tl elist))) env' in 
+    
+  let letstar_helper (blist,elist)
+                     (env: environment): value = 
       let env' = ref env in
       let tuple = List.fold_left (fun a x -> match x with 
                                   | (v,e) -> 
                                   env' := Environment.add_binding !env' 
                                           (v, ref (eval e !env')); 
                                   (v::fst(a),e::snd(a))) ([],[]) blist in
-      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in
+      eval (ExprProcCall (ExprLambda ((fst tuple), elist) , (snd tuple))) !env' in   
 
 
   let letrec_helper (blist, elist) env =
