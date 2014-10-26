@@ -204,22 +204,29 @@ module RangeIterator : RANGE_ITERATOR = functor (I : ITERATOR) -> struct
   type 'a t = 'a I.t
   exception NoResult
 
-  let switch = ref true
+  let count = ref 0
+  let mi = ref 0
+  let ni = ref 0
 
 (*
 Returns: true if there are more results to show, otherwise false
 Requires: l to be type 'a t
 *)  
   let has_next (i: 'a t): bool = 
-    I.has_next i
+    if (!count < !mi) && (!ni <= !mi) then
+      I.has_next i
+    else
+      false 
 
 (*
 Returns: the next element of l, if there are any, otherwise raises NoResult
 Requires: l to be type 'a t
 *)
   let next (i: 'a t): 'a = 
-    if !switch then 
-      I.next i
+
+    if !count < !mi then 
+      (count := !count + 1;
+      I.next i)
     else 
       raise NoResult
 
@@ -230,19 +237,16 @@ returns NoResult
 Requires: n and m to be type int, i to be type 'a I.t
 *)
   let create (n: int) (m: int) (i: 'a I.t): 'a t = 
-    let advance (n: int) (i: 'a t) : unit =
-      let uniti (i: 'a t): unit = 
-          next i;
-          () in 
-        let x = ref n in
-      while !x <> 0 do
-        uniti i;
-        x := !x - 1
-      done in
-    let count = ref n in
-    advance n i; 
-    count := !count + 1;
-    if (!count <= m) && (n <= m) then
+
+    mi := m;
+    ni := n;
+    while !count < n-1 do 
+      count := !count + 1;
+      let _ = I.next i in
+      ()
+    done;
+
+    if n <= m then
       i
     else
       raise NoResult

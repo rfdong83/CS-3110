@@ -1,3 +1,97 @@
+module Identifier = struct
+type identifier = string
+
+let identifier_of_string str = String.lowercase str
+
+let string_of_identifier id = id
+
+let keywords =
+  ["quote"; "if"; "lambda"; "define"; "set!"; "let"; "let*"; "letrec"]
+
+let is_keyword id = List.mem id keywords
+let is_valid_variable id = not (is_keyword id)
+
+(* variable has the representation invariant that it is not one of the keywords
+   listed above. *)
+type variable = identifier
+
+let variable_of_identifier id =
+  let () = assert (is_valid_variable id) in id
+
+let string_of_variable var = var
+
+end
+
+module Environment = struct
+  type 'a binding = Identifier.variable * 'a
+type 'a environment = 'a binding list
+
+(* Constants *)
+let empty_environment = []
+
+(* Binding related functions *)
+let add_binding env bnd = bnd :: env
+let is_bound env name = List.mem_assoc name env
+let get_binding env name = List.assoc name env
+
+let combine_environments env env' = env @ env'
+
+(* Stringifing functions *)
+let string_of_binding string_of_value (var, value) =
+  (Identifier.string_of_variable var) ^ " -> " ^ (string_of_value value)
+
+let string_of_environment string_of_value env =
+  let string_of_binding = string_of_binding string_of_value in
+  let stringified_bindings = List.map string_of_binding env in
+  let all_bindings_string = String.concat ", " stringified_bindings in
+  all_bindings_string
+
+end
+
+module Ast = struct
+type identifier        = Identifier.identifier
+type variable          = Identifier.variable
+
+type atom =
+  | Boolean            of bool
+  | Integer            of int
+  | Identifier         of identifier
+
+type datum =
+  | Atom               of atom
+  | Cons               of datum * datum
+  | Nil
+
+type self_evaluating =
+  | SEBoolean          of bool
+  | SEInteger          of int
+
+and let_binding        = variable * expression
+
+and expression =
+  | ExprSelfEvaluating of self_evaluating
+  | ExprVariable       of variable
+  | ExprQuote          of datum
+  | ExprLambda         of variable list * expression list
+  | ExprProcCall       of expression * expression list
+  | ExprIf             of expression * expression * expression
+  | ExprAssignment     of variable * expression
+  | ExprLet            of let_binding list * expression list
+  | ExprLetStar        of let_binding list * expression list
+  | ExprLetRec         of let_binding list * expression list
+
+type toplevel =
+  | ToplevelExpression of expression
+  | ToplevelDefinition of variable * expression
+
+end
+
+(* <<<<<<<<<<<<<<<<<<<<<<<< DELETE THIS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> *)
+
+
+
+open Environment
+open Identifier
 open Ast
 
 exception Error
@@ -19,6 +113,7 @@ exception Error
 
 (* Parses a datum into an expression. *)
 let rec read_expression (input : datum) : expression =
+
   (* Helper Function: takes in Scheme3110 list and applies read to each datum
    *  and returns the expression list. *)
   let rec eval_list (data: datum): expression list =
@@ -26,6 +121,7 @@ let rec read_expression (input : datum) : expression =
       | Cons (d1, Nil) -> [read_expression d1]
       | Cons (d1, d2) -> (read_expression d1) :: (eval_list d2)
       | _ -> failwith "gfy" in
+
   (* Helper Function: takes in an expression list and runs read_expression*)
   let elist_to_varlist (lst: expression list): variable list =
     List.rev (List.fold_left 
@@ -33,12 +129,12 @@ let rec read_expression (input : datum) : expression =
                 |ExprVariable v -> v::a
                 |_ -> a)
      [] lst) in
-  (* Helper Function: takes an expression and turns it into a variable *)
+
   let expr_to_var (expr: expression): variable = 
     match expr with 
     | ExprVariable v -> v
     | _ -> failwith "That isn't going to be a variable..." in
-  (* Helper Function: takes a list of data and parses it into a letbinding list. *)
+
   let rec lst_to_bind (lst: datum): let_binding list =
     match lst with
     | Cons (Cons(v, Cons (e, Nil)), Nil) -> 
@@ -97,14 +193,14 @@ let rec read_expression (input : datum) : expression =
       ExprQuote Nil
   | _ -> failwith "Everything else"
 
-
 (* Parses a datum into a toplevel input. *)
 let read_toplevel (input : datum) : toplevel =
   let datum_to_var input =
     match (read_expression input) with
     | ExprVariable x -> x
     | _ -> failwith "Wasn't going to be a variable" in
-   match input with
+
+  match input with
   | Cons (Atom (Identifier id), Cons (var, Cons(expr, Nil))) 
     when (Identifier.string_of_identifier id) = "define" -> 
       ToplevelDefinition ((datum_to_var var), (read_expression expr))
@@ -118,45 +214,39 @@ let rec initial_environment () : environment =
   (* Helper Function: takes a string and returns a variable with that name*)
   let variable_of_string s = 
     Identifier.variable_of_identifier (Identifier.identifier_of_string s) in 
-  (* Helper Function: Returns the first element of a cons pair *)
+
   let car l env = 
     match l with 
     | [ValDatum (Cons (a,b))] -> ValDatum a
     | _ -> failwith "fix later" in 
-  (* Helper Function: Returns the second element of a cons pair *)
   let cdr l env =
     match l with 
     | [ValDatum (Cons (a,b))] -> ValDatum b
     | _ -> failwith "fix later" in 
-  (* Helper Function: Takes two elements and then returns a cons pair *)
   let cons l env =
     match l with 
     | [ValDatum d1; ValDatum d2] -> ValDatum (Cons (d1,d2))
     | _ -> failwith "fix later" in
-  (* Helper Function: Like Ocaml's +, but can be applied to as many arguments *)
   let ( + ) l env =
     let ans = List.fold_left (fun a x -> match x with 
               |ValDatum (Atom (Integer x)) -> a + x
               | _ -> failwith "not an int") 0 l in
     ValDatum (Atom (Integer ans)) in
-  (* Helper Function: Like Ocaml's *, but can be applied to as many arguments *)
   let ( * ) l env =
     let ans = List.fold_left (fun a x -> match x with  
               |ValDatum (Atom (Integer x)) -> a * x
               | _ -> failwith "not an int") 1 l in
     ValDatum (Atom (Integer ans)) in
-  (* Helper Function: Like Ocaml's =, checks for physical equality *)
   let equal l env =
     match l with
     | [ValDatum d1; ValDatum d2] -> ValDatum (Atom (Boolean (d1=d2)))
     | _ -> failwith "not equal" in
-  (* Helper Function: Evaluates a datum value in the current environment *)
   let evaluate l env =
     match l with
     | [ValDatum d] -> eval (read_expression d) !ans
     | _ -> failwith "idk?" in
 
-  (*Adds all the functions into the environment*)
+
   ans := Environment.add_binding !ans ((variable_of_string "course"), 
                                         ref (ValDatum (Atom(Integer 3110)))
                                       );
@@ -181,7 +271,7 @@ let rec initial_environment () : environment =
   ans := Environment.add_binding !ans ((variable_of_string "eval"),
                                         ref (ValProcedure (ProcBuiltin evaluate))
                                       );
-  !ans 
+  !ans
 
 
 (* Evaluates an expression down to a value in a given environment. *)
@@ -202,42 +292,36 @@ and eval (expression : expression) (env : environment) : value =
   let elist_to_vlist lst =
     List.rev (List.fold_left (fun a x -> (eval x env)::a)
         [] lst) in
-   (* Helper Function: Takes a let_binding and adds it to the environment*)
-  let eval_binding (binding: let_binding) (env: environment) : environment =
-      match binding with
-      | (var, expr) -> Environment.add_binding 
-                       Environment.empty_environment (var, ref (eval expr env)) in
 
-
-  (* Helper Function: For evaluating ExprSelfEvaluating *)
   let self_evaluating_helper (se: self_evaluating) (env: environment) : value =
     match se with
     | SEInteger x -> ValDatum (Atom (Integer x))
     | SEBoolean tf -> ValDatum (Atom (Boolean tf)) in
-  (* Helper Function: For evaluating ExprVariable *)
+
   let variable_helper (var: variable) (env: environment) : value =
       if (Environment.is_bound env var) then
           !(Environment.get_binding env var)
       else
           failwith "variable helper" in
-  (* Helper Function: For evaluating ExprQuote*)
+
   let quote_helper (quote: datum) (env: environment) : value =
       match quote with
       | Atom a -> ValDatum (Atom a)
       | Cons (q, _) -> ValDatum q
       | Nil -> ValDatum Nil in
-  (* Helper Function: For evaluating ExprLambda *)
+
   let lambda_helper (vlist, elist : variable list * expression list) 
                     (env: environment) : value =
       if unique vlist then 
           ValProcedure (ProcLambda (vlist, env, elist))
         else
           failwith "lambda helper" in
-  (* Helper Function: For evaluating ExprProcCall *)
+
+
   let procedure_helper (funct, inputs : expression * expression list)
-                       (environment: environment) : value =
-      match (eval funct environment) with
-      | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist inputs) environment
+                       (env: environment) : value =
+      match (eval funct env) with
+      | ValProcedure (ProcBuiltin f) -> f (elist_to_vlist inputs) env
       | ValProcedure (ProcLambda (parameters, env, body)) ->
           if List.length parameters = List.length inputs then
               let values = (elist_to_vlist inputs) in
@@ -252,14 +336,16 @@ and eval (expression : expression) (env : environment) : value =
           else
               failwith "Invalid input numbers"
       | _ -> failwith "procedure error" in
-  (* Helper Function: For evaluating ExprIf *)
+
+
+
   let if_helper (e1, e2, e3 : expression * expression * expression)
                 (env: environment) : value =
       if e1 = ExprSelfEvaluating (SEBoolean false) then 
             eval e3 env
         else
             eval e2 env in
-  (* Helper Function: For evaluating ExprAssignment *)
+
   let assignment_helper (var,expr) env =
     if (Environment.is_bound env var) then
       let bind = Environment.get_binding env var in 
@@ -267,7 +353,19 @@ and eval (expression : expression) (env : environment) : value =
       ValDatum Nil
     else
       failwith "assignment error" in 
-  (* Helper Function: For evaluating ExprLetStar*)
+
+  let eval_binding (binding: let_binding) (env: environment) : environment =
+      match binding with
+      | (var, expr) -> Environment.add_binding 
+                       Environment.empty_environment (var, ref (eval expr env)) in
+
+  (*let dummy_binding (binding: let_binding) (env: environment) : let_binding =
+      match binding with
+      | (var, _) -> if Environment.is_bound env var then
+                           failwith "Same arguments"
+                       else 
+                          (var, ExprSelfEvaluating (SEInteger 0)) in*)
+
   let letstar_helper (blist, elist) (env: environment): value = 
       let env' = List.fold_left 
                   (fun a x -> match x with
@@ -275,7 +373,7 @@ and eval (expression : expression) (env : environment) : value =
                           Environment.combine_environments (eval_binding (var, expr) a) a)
                           env blist in
       List.fold_left (fun a x -> eval x env') (ValDatum Nil) elist in
-  (* Helper Function: For evaluating ExprLet *)
+    
   let let_helper (blist,elist) (env: environment): value = 
       let env' = List.fold_left 
                   (fun a x -> match x with
@@ -287,26 +385,32 @@ and eval (expression : expression) (env : environment) : value =
                           Environment.empty_environment blist in
       let env'' = Environment.combine_environments env' env in
       List.fold_left (fun a x -> eval x env'') (ValDatum Nil) elist in
-  (* Helper Function: For evaluating ExprLetRec *)
+
   let letrec_helper (blist, elist) env =
+      (*let dummy_list = List.rev(List.fold_left (fun a x -> (dummy_binding x env)::a) [] blist) in
+      let assignments = List.fold_left 
+                        (fun a x -> match x with
+                        | (var, expr) -> ExprAssignment (var, expr) :: a) [] blist in
+      eval (ExprLet(dummy_list, (assignments @ elist))) env in*)
       let dummy = List.fold_left 
                         (fun a x -> match x with
                         | (var, expr) ->
                             if Environment.is_bound a var then
                                 let value = Environment.get_binding a var in
-                                value := (ValDatum (Atom (Integer 0)));
+                                value := (ValDatum Nil);
                                 a
                             else
                                 Environment.add_binding a 
                                 (var, ref (ValDatum (Atom (Integer 0)))))
                         env blist in
       let env' = List.fold_left 
-                  (fun a x -> match x with
-                  | (var, expr) ->
-                          Environment.combine_environments (eval_binding (var, expr) a) a)
-                          dummy blist in
+                        (fun a x -> match x with
+                        | (var, expr) -> 
+                            let value = Environment.get_binding a var in
+                            value := (eval expr dummy); 
+                            a) 
+                        dummy blist in
       List.fold_left (fun a x -> eval x env') (ValDatum Nil) elist in
-
 
   match expression with
   | ExprSelfEvaluating se -> self_evaluating_helper se env
